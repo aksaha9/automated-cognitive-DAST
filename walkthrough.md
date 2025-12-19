@@ -37,7 +37,14 @@ This test verifies the system's ability to scan a public web application (SPA or
 -   **Report**: "Export Report" button appears.
 
 ### Verification Proof
-![Web App Scan Demo](verify_webapp_scan_fixed_1766186083890.webp)
+### Verification Proof
+````carousel
+![Scan Configuration](filled_scan_form_1766186880796.png)
+<!-- slide -->
+![Scan Results (18 Findings)](scan_results_1766187017603.png)
+<!-- slide -->
+![Web App Scan Recording](verify_webapp_scan_v3_static_1766186844865.webp)
+````
 
 ---
 
