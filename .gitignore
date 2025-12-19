@@ -2,3 +2,4 @@
 __pycache__/
 backend/config.ini
 local-test/
+implementation_plan.md
