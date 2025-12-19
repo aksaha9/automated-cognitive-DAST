@@ -39,19 +39,16 @@ const NewScanForm = () => {
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-2">Target URL</label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span className="text-slate-400 text-sm">https://</span>
-                            </div>
                             <input
-                                type="text"
+                                type="url"
                                 required
-                                className="input-field pl-16 font-mono text-sm"
-                                placeholder="api.example.com"
-                                value={url.replace(/^https?:\/\//, '')}
+                                className="input-field pl-4 font-mono text-sm w-full"
+                                placeholder="https://api.example.com"
+                                value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                             />
                         </div>
-                        <p className="text-xs text-slate-400 mt-1">Refrain from scanning targets you do not own.</p>
+                        <p className="text-xs text-slate-400 mt-1">Include http:// or https://. Refrain from scanning targets you do not own.</p>
                     </div>
 
                     <div>
@@ -77,11 +74,23 @@ const NewScanForm = () => {
                     </div>
 
                     <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Vulnerability Checks</label>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                            {['SQL Injection', 'XSS', 'CSRF', 'Path Traversal'].map((check) => (
+                                <label key={check} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                                    <input type="checkbox" defaultChecked className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                    <span>{check}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-2">Report Format</label>
                         <select
                             value={reportFormat}
                             onChange={(e) => setReportFormat(e.target.value)}
-                            className="input-field appearance-none bg-slate-50 text-slate-900"
+                            className="input-field appearance-none bg-slate-50 text-slate-900 w-full"
                         >
                             <option value="JSON">JSON (Standard)</option>
                             <option value="SARIF">SARIF (GitHub Security)</option>

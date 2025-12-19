@@ -25,18 +25,19 @@ This test verifies the system's ability to scan a public web application (SPA or
 
 ### Steps
 1.  Navigate to **New Scan**.
-2.  Enter Target URL: `https://boolean-algebra-equation-solver-msqswtglba-nw.a.run.app/`
-    *   *Note: The system now automatically handles missing schemes.*
+2.  Enter Full Target URL: `https://boolean-algebra-equation-solver-msqswtglba-nw.a.run.app/`
+    *   *Note: You must now include the protocol (http:// or https://).*
 3.  Select **Web App Scan**.
-4.  Click **Launch Scan**.
+4.  Optionally select specific **Vulnerability Checks**.
+5.  Click **Launch Scan**.
 
 ### Expected Results
 -   **Progress**: Status moves from 0% (Orchestration) -> ~50% (Spidering) -> 100% (Completed).
--   **Findings**: For a clean site, 0 vulnerabilities are expected.
+-   **Findings**: The scanner should correctly identify vulnerabilities (e.g., ~18 findings for the boolean-algebra app).
 -   **Report**: "Export Report" button appears.
 
 ### Verification Proof
-![Web App Scan Demo](verify_webapp_custom_target_retry_1766149584909.webp)
+![Web App Scan Demo](verify_fix_full_verification_1766151590409.webp)
 
 ---
 

@@ -71,17 +71,22 @@ async def stop_scan(scan_id: str):
 
 @router.post("/scan", response_model=ScanStatus)
 async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
+    # Normalize URL: Ensure it starts with http:// or https://
+    target_url = request.target_url
+    if not target_url.startswith("http"):
+        target_url = "https://" + target_url
+
     scan_id = str(uuid.uuid4())
     scan_status = ScanStatus(
         id=scan_id,
         state=ScanState.PENDING,
         progress=0,
         created_at=datetime.now(),
-        target_url=request.target_url
+        target_url=target_url
     )
     scans[scan_id] = scan_status
     
-    background_tasks.add_task(run_scan_task, scan_id, request.target_url)
+    background_tasks.add_task(run_scan_task, scan_id, target_url)
     return scan_status
 
 @router.get("/scan/{scan_id}", response_model=ScanStatus)
