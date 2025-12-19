@@ -1,0 +1,38 @@
+@startuml
+autonumber
+title Automated Cognitive DAST - Execution Flow
+
+actor "SecOps User" as User
+participant "Gemini/Claude (Host)" as AI
+participant "RAG (Organizational Policies)" as RAG
+participant "MCP Server" as MCP
+participant "ZAP Engine" as ZAP
+participant "Target App" as App
+
+== Initialization ==
+User -> AI: "Run DAST on Finance API (target.com)"
+AI -> RAG: "Retreive PenTest guidelines for Finance APIs"
+RAG --> AI: Returns: "Must check IDOR & JWT weakness"
+
+== Configuration ==
+AI -> MCP: Call tool: configure_target(url, auth_config)
+MCP -> ZAP: Set Context & Auth Scripting
+AI -> MCP: Call tool: select_scan_type(type="API")
+MCP -> ZAP: Load OpenAPI Definition
+
+== Execution ==
+AI -> MCP: Call tool: start_scan(policy="organization_policies_Strict")
+MCP -> ZAP: Launch Active Scan
+loop Scanning
+    ZAP -> App: Inject Malicious Payloads
+    App --> ZAP: HTTP Responses
+end
+ZAP --> MCP: Scan Complete
+MCP --> AI: Return Raw Alerts (JSON)
+
+== Analysis & Reporting ==
+AI -> AI: Analyze Exploitability of Alerts
+note right: "Is this SQLi actually exploitable\nor just a false positive?"
+AI -> User: Generate Report with Remediation Steps
+
+@enduml

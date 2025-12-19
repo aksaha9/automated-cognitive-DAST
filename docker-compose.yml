@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  zap:
+    image: zaproxy/zap-stable
+    command: zap.sh -daemon -port 8080 -host 0.0.0.0 -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true -config api.key=change-me-920394
+    ports:
+      - "8090:8080"
+    networks:
+      - dast-network
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ZAP_URL=http://zap:8080
+      - ZAP_API_KEY=change-me-920394
+    depends_on:
+      - zap
+    networks:
+      - dast-network
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - dast-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  vulnerable-api:
+    build: ./test-stubs/vulnerable-api
+    ports:
+      - "8001:8000"
+    networks:
+      - dast-network
+
+networks:
+  dast-network:
+    driver: bridge
