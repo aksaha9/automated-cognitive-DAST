@@ -37,7 +37,7 @@ This test verifies the system's ability to scan a public web application (SPA or
 -   **Report**: "Export Report" button appears.
 
 ### Verification Proof
-![Web App Scan Demo](verify_fix_full_verification_1766151546717.webp)
+![Web App Scan Demo](verify_webapp_scan_fixed_1766186083890.webp)
 
 ---
 
