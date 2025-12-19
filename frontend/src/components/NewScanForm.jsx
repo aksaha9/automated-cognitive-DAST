@@ -7,16 +7,88 @@ const NewScanForm = () => {
     const [scanType, setScanType] = useState('API');
     const [reportFormat, setReportFormat] = useState('JSON');
     const [loading, setLoading] = useState(false);
+
+    // AI Mode State
+    const [isAiMode, setIsAiMode] = useState(false);
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [analyzing, setAnalyzing] = useState(false);
+    const [aiReasoning, setAiReasoning] = useState('');
+
+    // Controlled Checks State
+    const [selectedChecks, setSelectedChecks] = useState({
+        'SQL Injection': true,
+        'XSS': true,
+        'CSRF': true,
+        'Path Traversal': true
+    });
+
     const navigate = useNavigate();
+
+    const handleCheckChange = (check) => {
+        setSelectedChecks(prev => ({
+            ...prev,
+            [check]: !prev[check]
+        }));
+    };
+
+    const handleAnalyze = async () => {
+        if (!aiPrompt.trim()) return;
+        setAnalyzing(true);
+        setAiReasoning('');
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/analyze`, {
+                prompt: aiPrompt
+            });
+
+            const { scan_type, checks, reasoning } = response.data;
+
+            // Apply AI Configuration
+            setScanType(scan_type);
+            setAiReasoning(reasoning);
+
+            // Update checks based on AI response
+            const newChecks = {
+                'SQL Injection': false,
+                'XSS': false,
+                'CSRF': false,
+                'Path Traversal': false
+            };
+
+            checks.forEach(check => {
+                // Fuzzy match or exact match mapping
+                if (check.includes("SQL")) newChecks['SQL Injection'] = true;
+                if (check.includes("XSS")) newChecks['XSS'] = true;
+                if (check.includes("CSRF")) newChecks['CSRF'] = true;
+                if (check.includes("Path")) newChecks['Path Traversal'] = true;
+            });
+
+            // If AI returns generic checks not in our list, or empty, we might want to default to some behavior
+            // For now, trusting the explicit mapping. 
+            // If checking "Full Scan", AI should return all keys.
+
+            setSelectedChecks(prev => ({ ...prev, ...newChecks }));
+
+        } catch (error) {
+            console.error("AI Analysis Failed", error);
+            alert("Failed to analyze intent. Please configure manually.");
+        } finally {
+            setAnalyzing(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        // Convert selected checks to list
+        const activeChecks = Object.keys(selectedChecks).filter(key => selectedChecks[key]);
+
         try {
             const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/scan`, {
                 target_url: url,
                 scan_type: scanType,
-                report_format: reportFormat
+                report_format: reportFormat,
+                scan_types: activeChecks
             });
             navigate(`/scan/${response.data.id}`);
         } catch (error) {
@@ -35,6 +107,43 @@ const NewScanForm = () => {
             </div>
 
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div className="mb-6 flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <span className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        AI Assisted Mode
+                    </span>
+                    <button
+                        type="button"
+                        onClick={() => setIsAiMode(!isAiMode)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isAiMode ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                    >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAiMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                </div>
+
+                {isAiMode && (
+                    <div className="mb-8 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                        <label className="block text-sm font-semibold text-indigo-900 mb-2">Describe your security goal</label>
+                        <textarea
+                            className="w-full p-3 rounded border border-indigo-200 text-sm focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
+                            placeholder="e.g., 'I want to check this Finance API for IDOR and SQL Injection vulnerabilities specifically.'"
+                            value={aiPrompt}
+                            onChange={(e) => setAiPrompt(e.target.value)}
+                        />
+                        <div className="mt-3 flex items-center justify-between">
+                            <button
+                                type="button"
+                                onClick={handleAnalyze}
+                                disabled={analyzing || !aiPrompt.trim()}
+                                className="btn-primary py-2 px-4 text-sm bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                            >
+                                {analyzing ? 'Analyzing...' : 'Analyze Intent'}
+                            </button>
+                            {aiReasoning && <span className="text-xs text-indigo-700 italic max-w-xs text-right">"{aiReasoning}"</span>}
+                        </div>
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-2">Target URL</label>
@@ -76,9 +185,14 @@ const NewScanForm = () => {
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-2">Vulnerability Checks</label>
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                            {['SQL Injection', 'XSS', 'CSRF', 'Path Traversal'].map((check) => (
-                                <label key={check} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
-                                    <input type="checkbox" defaultChecked className="rounded text-indigo-600 focus:ring-indigo-500" />
+                            {Object.keys(selectedChecks).map((check) => (
+                                <label key={check} className={`flex items-center space-x-2 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer ${selectedChecks[check] ? 'bg-slate-50 border-slate-300' : 'border-slate-200'}`}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedChecks[check]}
+                                        onChange={() => handleCheckChange(check)}
+                                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                                    />
                                     <span>{check}</span>
                                 </label>
                             ))}

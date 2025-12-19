@@ -1,0 +1,14 @@
+[AI]
+; Provider options: google, openai, anthropic, ollama
+provider = google
+; Model examples: gemini-1.5-pro, gpt-4, claude-3-opus, llama3
+model_name = gemini-1.5-pro
+; API Key (Leave empty if using Ollama)
+api_key = 
+; Base URL (Optional, mostly for Ollama e.g., http://localhost:11434/api/generate)
+base_url = 
+
+[ZAP]
+; ZAP Configuration if needed in future
+base_url = http://zap:8080
+api_key = change-me-920394

@@ -24,6 +24,15 @@ class ScanRequest(BaseModel):
     target_url: str
     scan_type: ScanType
     report_format: Optional[ReportFormat] = ReportFormat.JSON
+    scan_types: Optional[List[str]] = []
+
+class AnalyzeRequest(BaseModel):
+    prompt: str
+
+class AnalysisResponse(BaseModel):
+    scan_type: str
+    checks: List[str]
+    reasoning: Optional[str] = ""
 
 class ScanStatus(BaseModel):
     id: str

@@ -228,3 +228,21 @@ async def get_scan_results(scan_id: str, format: ReportFormat = Query(ReportForm
             summary={"count": len(vulnerabilities)},
             format=ReportFormat.JSON
         )
+
+# AI Integration
+from app.services.llm_service import LLMService
+from app.models import AnalyzeRequest, AnalysisResponse
+
+llm_service = LLMService()
+
+@router.post("/analyze", response_model=AnalysisResponse)
+async def analyze_intent(request: AnalyzeRequest):
+    """
+    Analyzes a natural language security requirement and returns a scan configuration.
+    """
+    analysis = llm_service.analyze_intent(request.prompt)
+    return AnalysisResponse(
+        scan_type=analysis.get("scan_type", "WEB"),
+        checks=analysis.get("checks", []),
+        reasoning=analysis.get("reasoning", "")
+    )

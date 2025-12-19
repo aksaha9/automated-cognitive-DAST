@@ -1,2 +1,4 @@
 .gemini/
 __pycache__/
+backend/config.ini
+local-test/
