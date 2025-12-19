@@ -39,11 +39,11 @@ This test verifies the system's ability to scan a public web application (SPA or
 ### Verification Proof
 ### Verification Proof
 ````carousel
-![Scan Configuration](filled_scan_form_1766186880796.png)
+![Scan Configuration](examples/verifications/filled_scan_form_1766186880796.png)
 <!-- slide -->
-![Scan Results (18 Findings)](scan_results_1766187017603.png)
+![Scan Results (18 Findings)](examples/verifications/scan_results_1766187017603.png)
 <!-- slide -->
-![Web App Scan Recording](verify_webapp_scan_v3_static_1766186844865.webp)
+![Web App Scan Recording](examples/verifications/verify_webapp_scan_v3_static_1766186844865.webp)
 ````
 
 ---
@@ -66,7 +66,7 @@ This test verifies the system's ability to scan a REST API. We use the included 
 -   **Report**: SARIF/OCSF/JSON exports are generated.
 
 ### Verification Proof
-![API Scan Demo](verify_api_scan_final_pass_1766098970614.webp)
+![API Scan Demo](examples/verifications/verify_api_scan_final_pass_1766098970614.webp)
 
 ---
 
@@ -98,6 +98,6 @@ To test:
 - **Checks**: `SQL Injection` and `XSS` checked. `CSRF` and `Path Traversal` unchecked (Correct).
 - **Reasoning**: Displayed AI explanation including *"The user explicitly identified the target as an API..."*.
 
-![AI Verification Recording](verify_ai_mode_live_success_1766185075051.webp)
+![AI Verification Recording](examples/verifications/verify_ai_mode_live_success_1766185075051.webp)
 
 **Status**: ✅ **SUCCESS**
