@@ -73,3 +73,24 @@ Supported export formats for integration with other tools:
 To test:
 1.  Complete any scan.
 2.  Click the **Export Report** dropdown on the results page.
+
+---
+
+## 5. AI Assisted Scan Verification
+**Objective**: Verify that natural language prompts correctly configure the scan settings using the live Gemini AI model.
+
+**Steps Performed**:
+1.  Navigated to `New Scan`.
+2.  Enabled **AI Assisted Mode**.
+3.  Entered prompt: *"I want to perform a rigorous test for SQL injection and XSS attacks on my API."*
+4.  Clicked **Analyze Intent**.
+
+**Results**:
+- **Authentication**: Backend successfully authenticated with Google Gemini API using `gemini-3-pro-preview`.
+- **Scan Type**: Automatically switched to `API Scan` (Correct).
+- **Checks**: `SQL Injection` and `XSS` checked. `CSRF` and `Path Traversal` unchecked (Correct).
+- **Reasoning**: Displayed AI explanation including *"The user explicitly identified the target as an API..."*.
+
+![AI Verification Recording](verify_ai_mode_live_success_1766185075051.webp)
+
+**Status**: ✅ **SUCCESS**

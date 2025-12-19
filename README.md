@@ -13,6 +13,7 @@ A modern, containerized Dynamic Application Security Testing (DAST) solution lev
 -   **Reporting**: Export vulnerabilities in JSON, SARIF (GitHub Security), or OCSF formats.
 -   **Containerized**: Fully Docker-based architecture for easy deployment.
 -   **Cognitive Logic**: Python-based orchestration layer that handles scan logic, state management, and error recovery.
+-   **AI Assisted Scanning**: Natural language interface that uses LLMs (like Gemini) to automatically configure scan types and vulnerability checks based on user intent.
 
 ## Architecture
 
