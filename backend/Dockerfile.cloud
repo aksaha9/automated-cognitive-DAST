@@ -1,0 +1,51 @@
+# Unified Dockerfile for Cloud Run (Persistent & Ephemeral)
+# Base image: Official ZAP Stable (includes Java, ZAP, basic Python)
+FROM ghcr.io/zaproxy/zaproxy:stable
+
+USER root
+
+# Install Python 3, pip, and system dependencies
+# ZAP image is often Ubuntu or Debian based
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a virtual environment to avoid conflicts
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install Python Dependencies
+COPY backend/requirements.txt /app/requirements.txt
+# Add google-cloud-storage for job artifact upload
+RUN pip3 install --no-cache-dir -r /app/requirements.txt google-cloud-storage
+
+# Copy Application Code
+WORKDIR /app
+COPY backend/app /app/app
+COPY backend/config.ini.template /app/config.ini
+COPY backend/scan_rules.yaml /app/
+COPY backend/job_runner.py /app/
+COPY backend/start_service.sh /app/
+COPY backend/start_job.sh /app/
+
+# Grant execution permissions
+RUN chmod +x /app/start_service.sh /app/start_job.sh
+
+# Expose ports
+# 8080: Cloud Run Requirement (Service)
+# 8090: ZAP Proxy (Internal)
+EXPOSE 8080 8090
+
+# Default User (ZAP usually runs as 'zap' user 1000)
+# We need to ensure permissions are correct if we switch user
+# Keeping root for simplicity in Cloud Run (compatible), or switch to 'zap'
+# Switching to 'zap' is safer but requires chown
+RUN chown -R zap:zap /app
+USER zap
+
+# Default Entrypoint (Can be overridden)
+CMD ["./start_service.sh"]
