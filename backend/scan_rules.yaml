@@ -1,0 +1,28 @@
+# Default ZAP Scan Rules Definition
+# Maps human-readable Check Names to ZAP Logic IDs (Scanner IDs)
+# This file serves as the default configuration for "Full Scan".
+
+rules:
+  SQL Injection:
+    - "40018" # SQL Injection
+    - "40024" # SQL Injection - SQLite
+    - "40027" # SQL Injection - MsSQL
+    - "40029" # SQL Injection - SQLite
+  
+  XSS:
+    - "40012" # Reflected XSS
+    - "40014" # Persistent XSS
+    - "40016" # Persistent XSS - Prime
+    - "40017" # Persistent XSS - Spider
+
+  CSRF:
+    - "40035" # CSRF Token Scanning
+
+  Broken Access Control:
+    - "10104" # User Agent Fuzzer (Proxy) / Contextual
+
+  Path Traversal:
+    - "6"     # Path Traversal
+
+  Command Injection:
+    - "90020" # Remote OS Command Injection
