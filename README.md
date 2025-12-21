@@ -14,6 +14,7 @@ A modern, containerized Dynamic Application Security Testing (DAST) solution lev
 -   **Containerized**: Fully Docker-based architecture for easy deployment.
 -   **Cognitive Logic**: Python-based orchestration layer that handles scan logic, state management, and error recovery.
 -   **AI Assisted Scanning**: Natural language interface that uses LLMs (like Gemini) to automatically configure scan types and vulnerability checks based on user intent.
+-   **Ephemeral Headless Scan**: A lightweight, container-native mode for one-shot scans powered by AI. See [Ephemeral Headless Scan Documentation](docs/EPHEMERAL_ZAP_SCAN.md).
 
 ## Architecture
 

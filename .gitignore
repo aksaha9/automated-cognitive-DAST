@@ -3,3 +3,9 @@ __pycache__/
 backend/config.ini
 local-test/
 implementation_plan.md
+
+# Configurations and Reports
+config/*
+!config/*.example
+reports/
+walkthrough.md
