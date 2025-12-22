@@ -9,3 +9,5 @@ config/*
 !config/*.example
 reports/
 
+local_files/
+
