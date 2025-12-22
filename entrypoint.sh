@@ -65,11 +65,13 @@ fi
 # Ensure config and reports dirs exist
 mkdir -p "$REPORTS_DIR"
 
-# Copy llm_config.json into working dir (required by script)
+# Copy llm_config.json into working dir if it exists
 if [[ -f "$CONFIG_DIR/llm_config.json" ]]; then
     cp "$CONFIG_DIR/llm_config.json" /home/zap/llm_config.json
+elif [[ -n "$GEMINI_API_KEY" ]]; then
+    echo "Info: llm_config.json not found, using GEMINI_API_KEY from environment."
 else
-    echo "Error: llm_config.json not found in mounted /config directory!"
+    echo "Error: llm_config.json not found in mounted /config directory AND GEMINI_API_KEY not set!"
     exit 1
 fi
 

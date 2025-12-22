@@ -19,7 +19,7 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchScans = async () => {
             try {
-                const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/scans`);
+                const response = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/scans`);
                 setScans(response.data);
             } catch (error) {
                 console.error("Failed to fetch scans", error);

@@ -1,7 +1,17 @@
+# Stage 1: Build Frontend
+FROM node:18-alpine as frontend-build
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Final Image
 # Unified Dockerfile for Cloud Run (Persistent & Ephemeral)
 # Base image: Official ZAP Stable (includes Java, ZAP, basic Python)
 FROM ghcr.io/zaproxy/zaproxy:stable
 
+ENV PYTHONUNBUFFERED=1
 USER root
 
 # Install Python 3, pip, and system dependencies
@@ -18,6 +28,10 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# ZAP Configuration for Cloud Run (Unified Container)
+# Ensure Backend connects to Localhost ZAP on correct port (match start_service.sh)
+ENV ZAP_URL=http://127.0.0.1:8090
+
 # Install Python Dependencies
 COPY backend/requirements.txt /app/requirements.txt
 # Add google-cloud-storage for job artifact upload
@@ -31,6 +45,9 @@ COPY backend/scan_rules.yaml /app/
 COPY backend/job_runner.py /app/
 COPY backend/start_service.sh /app/
 COPY backend/start_job.sh /app/
+
+# Copy Frontend Artifacts
+COPY --from=frontend-build /app/frontend/dist /app/static
 
 # Grant execution permissions
 RUN chmod +x /app/start_service.sh /app/start_job.sh

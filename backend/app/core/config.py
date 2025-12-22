@@ -21,20 +21,25 @@ class Settings:
 
     @property
     def ai_provider(self):
-        return self.config.get('AI', 'provider', fallback='google')
+        return os.getenv("AI_PROVIDER") or self.config.get('AI', 'provider', fallback='google')
 
     @property
     def ai_model(self):
-        return self.config.get('AI', 'model_name', fallback='gemini-1.5-pro')
+        return os.getenv("AI_MODEL") or self.config.get('AI', 'model_name', fallback='gemini-1.5-pro')
 
     @property
     def ai_api_key(self):
+        # Prioritize Environment Variable (for Cloud Run)
+        env_key = os.getenv("GEMINI_API_KEY")
+        if env_key:
+            return env_key.strip().strip('"').strip("'")
+            
         key = self.config.get('AI', 'api_key', fallback='')
         return key.strip().strip('"').strip("'")
 
     @property
     def ai_base_url(self):
-        return self.config.get('AI', 'base_url', fallback='')
+        return os.getenv("AI_BASE_URL") or self.config.get('AI', 'base_url', fallback='')
 
 @lru_cache()
 def get_settings():

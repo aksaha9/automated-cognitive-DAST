@@ -1,103 +1,57 @@
-# Automated Cognitive DAST - Project Walkthrough
+# Walkthrough: Automated Cognitive DAST
 
-This document provides a comprehensive guide to running and testing the Automated Cognitive DAST system. It covers the setup, Web App scanning, and API scanning capabilities, demonstrating the fixes and features implemented.
+## 1. Public Live Demo
+We have deployed a live instance of the application on Google Cloud Run. You can access it here:
+👉 **[https://automated-cognitive-dast-service-510071073932.us-central1.run.app/](https://automated-cognitive-dast-service-510071073932.us-central1.run.app/)**
 
-## 1. System Setup
+## 2. AI Assisted Scan Verification
+The following recording demonstrates an AI-Assisted scan running on the public instance.
+**Scenario**: The user asks the AI to "check if this target is susceptible to data harvesting attacks" on `https://example.com`.
+**Process**:
+1.  User inputs natural language prompt.
+2.  Gemini analyzes intent and configures ZAP.
+3.  Scan executes and results are displayed.
 
-The project is fully containerized. To start the entire stack (Frontend, Backend, ZAP Engine, and Vulnerable API stub):
+![AI Assisted Scan Demo](docs/images/ai_scan_demo.webp)
 
+## 3. Ephemeral Headless Scan Verification
+We verified the **Ephemeral Job** functionality using the Google Cloud CLI. This mode bypasses the UI and runs the scan as a serverless job.
+
+**Command Executed:**
 ```bash
-docker compose down -v  # Clean start
-docker compose up --build -d
+gcloud run jobs execute zap-mcp-server-job \
+  --region us-central1 \
+  --args="--url=https://example.com" \
+  --args="--ai-prompt=I want to check if this target is susceptible to data harvesting attacks"
 ```
 
-### Services
--   **Frontend**: `http://localhost:5173` (React Dashboard)
--   **Backend**: `http://localhost:8000` (FastAPI Orchestrator)
--   **ZAP Engine**: `http://localhost:8090` (Headless Scanner)
--   **Vulnerable API**: `http://localhost:8001` (Host) / `http://vulnerable-api:8000` (Internal Docker)
+**Execution Output:**
+```console
+✓ Creating execution...
+  ✓ Provisioning resources... Provisioned imported containers.
+Done.                 
+Execution [zap-mcp-server-job-c5888] has successfully started running.
 
----
+View details about this execution by running:
+gcloud run jobs executions describe zap-mcp-server-job-c5888
+```
 
-## 2. Web App Scan Test
+## 4. Cloud Run Deployment Guide
 
-This test verifies the system's ability to scan a public web application (SPA or standard website).
+### Configuration Prerequisites
+To run this application successfully on Cloud Run, ensure the following configurations are set in your `cloudbuild.yaml` or deployment command:
 
-### Steps
-1.  Navigate to **New Scan**.
-2.  Enter Full Target URL: `https://boolean-algebra-equation-solver-msqswtglba-nw.a.run.app/`
-    *   *Note: You must now include the protocol (http:// or https://).*
-3.  Select **Web App Scan**.
-4.  Optionally select specific **Vulnerability Checks**.
-5.  Click **Launch Scan**.
+1.  **Memory**: **4Gi** (Critical for ZAP stability).
+2.  **Concurrency**: **`--max-instances 1`** (Critical for shared state/progress tracking).
+3.  **Environment Variables**:
+    *   `PYTHONUNBUFFERED=1` (For real-time logs).
+    *   `ZAP_URL=http://127.0.0.1:8090` (Internal).
+    *   `AI_PROVIDER=google` (For Gemini).
+4.  **Frontend Build**:
+    *   Ensure API calls fall back to relative paths (`/api/...`) instead of `localhost`.
 
-### Expected Results
--   **Progress**: Status moves from 0% (Orchestration) -> ~50% (Spidering) -> 100% (Completed).
--   **Findings**: The scanner should correctly identify vulnerabilities (e.g., ~18 findings for the boolean-algebra app).
--   **Report**: "Export Report" button appears.
-
-### Verification Proof
-### Verification Proof
-````carousel
-![Scan Configuration](examples/verifications/filled_scan_form_1766186880796.png)
-<!-- slide -->
-![Scan Results (18 Findings)](examples/verifications/scan_results_1766187017603.png)
-<!-- slide -->
-![Web App Scan Recording](examples/verifications/verify_webapp_scan_v3_static_1766186844865.webp)
-````
-
----
-
-## 3. API Scan Test
-
-This test verifies the system's ability to scan a REST API. We use the included `vulnerable-api` container as the target.
-
-### Steps
-1.  Navigate to **New Scan**.
-2.  Enter Target URL: `http://vulnerable-api:8000`
-    *   **Important**: Must use the *internal* Docker hostname `vulnerable-api` because the ZAP scanner runs inside the Docker network.
-3.  Select **API Scan**.
-4.  Click **Launch Scan**.
-
-### Expected Results
--   **Progress**: Completes successfully (100%).
--   **Findings**: The scan detects security misconfigurations (e.g., `X-Content-Type-Options Header Missing`).
-    *   *Note*: Deep vulnerability detection (like SQLi on specific endpoints) requires OpenAPI specs for the scanner to know *where* to look. The current text confirms the *engine* and *connectivity* are working perfectly.
--   **Report**: SARIF/OCSF/JSON exports are generated.
-
-### Verification Proof
-![API Scan Demo](examples/verifications/verify_api_scan_final_pass_1766098970614.webp)
-
----
-
-## 4. Reporting Features
-
-Supported export formats for integration with other tools:
--   **JSON**: Raw data for custom parsing.
--   **SARIF**: Standard format for GitHub Code Scanning and other CI/CD tools.
--   **OCSF**: Open Cybersecurity Schema Framework for security data lakes.
-
-To test:
-1.  Complete any scan.
-2.  Click the **Export Report** dropdown on the results page.
-
----
-
-## 5. AI Assisted Scan Verification
-**Objective**: Verify that natural language prompts correctly configure the scan settings using the live Gemini AI model.
-
-**Steps Performed**:
-1.  Navigated to `New Scan`.
-2.  Enabled **AI Assisted Mode**.
-3.  Entered prompt: *"I want to perform a rigorous test for SQL injection and XSS attacks on my API."*
-4.  Clicked **Analyze Intent**.
-
-**Results**:
-- **Authentication**: Backend successfully authenticated with Google Gemini API using `gemini-3-pro-preview`.
-- **Scan Type**: Automatically switched to `API Scan` (Correct).
-- **Checks**: `SQL Injection` and `XSS` checked. `CSRF` and `Path Traversal` unchecked (Correct).
-- **Reasoning**: Displayed AI explanation including *"The user explicitly identified the target as an API..."*.
-
-![AI Verification Recording](examples/verifications/verify_ai_mode_live_success_1766185075051.webp)
-
-**Status**: ✅ **SUCCESS**
+### Deployment Command
+```bash
+gcloud builds submit --config cloudbuild.yaml .
+```
+This builds the unified Docker image and deploys both the **Service** (UI) and the **Job** (Ephemeral).

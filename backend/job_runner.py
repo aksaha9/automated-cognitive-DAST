@@ -27,6 +27,7 @@ def main():
     parser.add_argument("--ai-prompt", help="Natural language prompt for AI configuration")
     parser.add_argument("--bucket", help="GCS Bucket to upload report")
     parser.add_argument("--format", default="json", choices=["json", "sarif", "html"], help="Output format")
+    parser.add_argument("--output", help="Full path to save the report file")
     args = parser.parse_args()
 
     print(f"Starting Ephemeral Scan for {args.url}")
@@ -116,20 +117,23 @@ def main():
         print("Scan Complete. Generating Report...")
         report_data = service.generate_report(args.format)
         
-        # Save locally
-        report_file = f"scan_report.{args.format}"
-        mode = "w" if args.format != "pdf" else "wb" # JSON/SARIF/HTML are text usually
-        # Actually generate_report returns dict for JSON, string for others?
-        # ZapService.generate_report implementation:
-        # If 'json' -> returns dict. If 'html'/'md' -> returns str.
+        # Determine output file
+        if args.output:
+            report_file = args.output
+        else:
+            report_file = f"scan_report.{args.format}"
+            
+        mode = "w" if args.format != "pdf" else "wb"
         
-        with open(report_file, mode) as f:
-            if isinstance(report_data, (dict, list)):
-                json.dump(report_data, f, indent=2)
-            else:
-                f.write(report_data)
-        
-        print(f"Report saved to {report_file}")
+        try:
+            with open(report_file, mode) as f:
+                if isinstance(report_data, (dict, list)):
+                    json.dump(report_data, f, indent=2)
+                else:
+                    f.write(report_data)
+            print(f"Report saved to {report_file}")
+        except Exception as e:
+            print(f"Failed to write report to {report_file}: {e}")
         
         # Upload if bucket provided
         bucket = args.bucket or os.environ.get("GCS_BUCKET")

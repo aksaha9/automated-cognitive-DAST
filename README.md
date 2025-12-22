@@ -1,66 +1,77 @@
 # Automated Cognitive DAST
 
-**Author**: Ashish Kumar Saha, API Security Engineering Lead
+**Author**: Ashish Kumar Saha  
+*API Security Engineering Lead*
 
-A modern, containerized Dynamic Application Security Testing (DAST) solution leveraging the OWASP ZAP engine. This system provides a React-based dashboard for orchestrating scans, monitoring progress in real-time, and exporting results in industry-standard formats.
+## Introduction
 
-## Features
+### Why?
+Security testing is often complex, requiring deep expertise to configure tools like OWASP ZAP correctly. "One-size-fits-all" scans take too long and miss context.
 
--   **Dashboard**: A responsive React UI for managing scans.
--   **Multi-Mode Scanning**:
-    -   **Web App Scan**: Traditional spidering and scanning of web applications.
-    -   **API Scan**: Targeted scanning of REST APIs (internal or external).
--   **Reporting**: Export vulnerabilities in JSON, SARIF (GitHub Security), or OCSF formats.
--   **Containerized**: Fully Docker-based architecture for easy deployment.
--   **Cognitive Logic**: Python-based orchestration layer that handles scan logic, state management, and error recovery.
--   **AI Assisted Scanning**: Natural language interface that uses LLMs (like Gemini) to automatically configure scan types and vulnerability checks based on user intent.
--   **Ephemeral Headless Scan**: A lightweight, container-native mode for one-shot scans powered by AI. See [Ephemeral Headless Scan Documentation](docs/EPHEMERAL_ZAP_SCAN.md).
+### What?
+**Automated Cognitive DAST** is a next-generation security scanner that combines the power of the **OWASP ZAP** engine with the intelligence of **Google Gemini 1.5 Pro**. It uses Generative AI to translate natural language intentions (e.g., "Check for data leaks") into precise, optimized security scans.
 
-## Architecture
+### How?
+The system runs in a unified container on Google Cloud Run. It accepts high-level prompts, consults an LLM to design a scan policy, and then orchestrates ZAP to execute that policy against the target.
 
-The system consists of three main containers:
-1.  **Frontend**: React + Vite (Port 5173)
-2.  **Backend**: FastAPI + Python (Port 8000)
-3.  **Engine**: OWASP ZAP (Port 8090/8080)
+---
 
-## Getting Started
+## 🚀 Live Demo
+Access the public instance running on Google Cloud Run:
+👉 **[Public Cloud Instance](https://automated-cognitive-dast-service-510071073932.us-central1.run.app/)**
 
-### Prerequisites
--   Docker & Docker Compose
+---
 
-### Quick Start
+## Architecture & Topology
 
-1.  Clone the repository:
-    ```bash
-    git clone https://github.com/aksaha9/automated-cognitive-DAST.git
-    cd automated-cognitive-DAST
-    ```
+The system uses a unified container architecture to deliver low-latency performance in a serverless environment.
 
-2.  Start the services:
-    ```bash
-    docker compose up --build -d
-    ```
+![System Topology](designs/topology.svg)
 
-3.  Access the Dashboard:
-    Open [http://localhost:5173](http://localhost:5173) in your browser.
+For a detailed breakdown of the internal components and execution flow, see:
+📄 **[Architecture Documentation](docs/ARCHITECTURE.md)**
 
-## Documentation
+---
 
-For a detailed visual guide on how to run web app and API scans, please refer to the [Walkthrough Document](walkthrough.md).
+## Ephemeral Mode
 
-## Usage
+In addition to the UI, this tool supports **Ephemeral Headless Scans**. These are "fire-and-forget" jobs perfect for CI/CD pipelines.
 
-### Running a Web App Scan
-1.  Navigate to "New Scan".
-2.  Enter the target URL (e.g., `https://example.com`).
-3.  Select "Web App Scan".
-4.  Click "Launch".
+![Ephemeral Topology](designs/ephemeral_topology.svg)
 
-### Running an API Scan (Internal/Local)
-To scan a service running within the same Docker network (like the provided `vulnerable-api` stub):
-1.  Use the internal service name: `http://vulnerable-api:8000`.
-2.  Select "API Scan".
+Learn how to trigger automated jobs via CLI or Cloud Scheduler:
+📄 **[Ephemeral Mode Documentation](docs/EPHEMERAL_MODE.md)**
+
+---
+
+## Usage Instructions
+
+### 1. Web App & API Scanning (UI)
+The primary way to use the tool is via the Dashboard.
+
+1.  **Launch**: Open the [Live Demo](https://automated-cognitive-dast-service-510071073932.us-central1.run.app/) or your local instance.
+2.  **Target**: Enter the URL to scan (e.g., `https://example.com`).
+3.  **Mode Selection**:
+    *   **Standard**: Choose "Web App" or "API".
+    *   **AI Assisted**: Select the "AI Assisted" tab.
+4.  **Prompt (AI Mode)**: Describe your goal.
+    *   *Example*: "I want to check if this target is susceptible to data harvesting attacks."
+5.  **Scan**: Click "Start Scan". The system will analyze your request, configure ZAP, and stream progress.
+6.  **Results**: View findings in the interactive report or export to JSON/SARIF.
+
+### 2. Local Deployment
+To run the full stack locally:
+
+```bash
+# Clone the repo
+git clone https://github.com/aksaha9/automated-cognitive-DAST.git
+
+# Start with Docker Compose
+docker compose up --build
+```
+Access at `http://localhost:5173`.
+
+---
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License

@@ -48,8 +48,11 @@ async def run_scan_task(scan_id: str, target_url: str):
         scans[scan_id].progress = 100
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"Scan failed: {e}")
         scans[scan_id].state = ScanState.FAILED
+
 
 @router.post("/scan/{scan_id}/stop")
 async def stop_scan(scan_id: str):
@@ -92,6 +95,7 @@ async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
 @router.get("/scan/{scan_id}", response_model=ScanStatus)
 async def get_scan_status(scan_id: str):
     if scan_id not in scans:
+        print(f"DEBUG:ScanNotFound: {scan_id} not in scans keys: {list(scans.keys())}")
         raise HTTPException(status_code=404, detail="Scan not found")
     return scans[scan_id]
 

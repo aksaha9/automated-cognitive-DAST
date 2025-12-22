@@ -6,11 +6,17 @@ import requests
 from fastmcp import FastMCP
 
 # Load LLM config from llm_config.json (copied by entrypoint.sh)
-with open("llm_config.json", "r") as f:
-    llm_config = json.load(f)
+try:
+    with open("llm_config.json", "r") as f:
+        llm_config = json.load(f)
+except FileNotFoundError:
+    llm_config = {}
 
-API_KEY = llm_config["api_key"]
-MODEL = llm_config["model"]
+API_KEY = os.getenv("GEMINI_API_KEY") or llm_config.get("api_key")
+if not API_KEY:
+    raise ValueError("GEMINI_API_KEY env var or api_key in llm_config.json is required.")
+
+MODEL = llm_config.get("model", "gemini-3-pro-preview")
 BASE_URL = llm_config.get("base_url", "https://generativelanguage.googleapis.com")
 
 # Correct initialization for current fastmcp (2.x+)

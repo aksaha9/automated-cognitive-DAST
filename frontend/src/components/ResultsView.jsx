@@ -12,11 +12,11 @@ const ResultsView = () => {
     useEffect(() => {
         const fetchResults = async () => {
             try {
-                const statusRes = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/scan/${id}`);
+                const statusRes = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/scan/${id}`);
                 setStatus(statusRes.data);
 
                 if (statusRes.data.state === 'COMPLETED') {
-                    const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/scan/${id}/results`);
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/scan/${id}/results`);
                     setResults(res.data);
                 }
             } catch (error) {
@@ -38,7 +38,7 @@ const ResultsView = () => {
 
     const handleExport = async (format) => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/scan/${id}/results`, {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/scan/${id}/results`, {
                 params: { format: format },
                 responseType: 'blob'
             });
@@ -61,9 +61,9 @@ const ResultsView = () => {
     const handleStop = async () => {
         if (!confirm('Are you sure you want to stop this scan?')) return;
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/scan/${id}/stop`);
+            await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/scan/${id}/stop`);
             alert('Stop signal sent');
-            const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/scan/${id}`);
+            const res = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/scan/${id}`);
             setStatus(res.data);
         } catch (e) {
             alert('Failed to stop scan');

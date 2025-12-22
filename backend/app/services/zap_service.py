@@ -26,6 +26,7 @@ class ZapService:
     def get_spider_status(self, scan_id: str) -> int:
         try:
             status = self.zap.spider.status(scan_id)
+            print(f"DEBUG: Spider scan_id={scan_id} status={status}")
             return int(status) if status.isdigit() else 0
         except Exception as e:
             print(f"Error getting spider status for {scan_id}: {e}")

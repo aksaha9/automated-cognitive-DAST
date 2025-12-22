@@ -36,7 +36,7 @@ const NewScanForm = () => {
         setAnalyzing(true);
         setAiReasoning('');
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/analyze`, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/analyze`, {
                 prompt: aiPrompt
             });
 
@@ -84,7 +84,7 @@ const NewScanForm = () => {
         const activeChecks = Object.keys(selectedChecks).filter(key => selectedChecks[key]);
 
         try {
-            const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/scan`, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL || ''}/api/scan`, {
                 target_url: url,
                 scan_type: scanType,
                 report_format: reportFormat,

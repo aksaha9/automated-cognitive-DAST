@@ -8,4 +8,4 @@ implementation_plan.md
 config/*
 !config/*.example
 reports/
-walkthrough.md
+
