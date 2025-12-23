@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Response
 from app.models import ScanRequest, ScanStatus, ScanResult, ScanState, Vulnerability, ScanType, ReportFormat
 from app.services.zap_service import ZapService
 import uuid
+import json
 from datetime import datetime
 import asyncio
 
@@ -85,7 +86,10 @@ async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
         state=ScanState.PENDING,
         progress=0,
         created_at=datetime.now(),
-        target_url=target_url
+        progress=0,
+        created_at=datetime.now(),
+        target_url=target_url,
+        report_format=request.report_format
     )
     scans[scan_id] = scan_status
     
@@ -198,7 +202,17 @@ def convert_to_ocsf(scan_id: str, target_url: str, vulnerabilities: list[Vulnera
     return {"findings": findings}
 
 @router.get("/scan/{scan_id}/results") # Removed response_model to allow returning arbitrary JSON for SARIF/OCSF
-async def get_scan_results(scan_id: str, format: ReportFormat = Query(ReportFormat.JSON, description="Output format: JSON, SARIF, or OCSF")):
+async def get_scan_results(scan_id: str, format: ReportFormat = None):
+    if scan_id not in scans:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    
+    scan = scans[scan_id]
+    
+    # Respect stored format if query param is not explicitly provided
+    if not format and scan.report_format:
+        format = scan.report_format
+    elif not format:
+        format = ReportFormat.JSON
     if scan_id not in scans:
         raise HTTPException(status_code=404, detail="Scan not found")
     
@@ -221,15 +235,37 @@ async def get_scan_results(scan_id: str, format: ReportFormat = Query(ReportForm
         ))
 
     if format == ReportFormat.SARIF:
-        return convert_to_sarif(scan_id, scan.target_url, vulnerabilities)
+        sarif_data = convert_to_sarif(scan_id, scan.target_url, vulnerabilities)
+        return Response(content=json.dumps(sarif_data, indent=2), media_type="application/json")
     elif format == ReportFormat.OCSF:
-        return convert_to_ocsf(scan_id, scan.target_url, vulnerabilities)
+        ocsf_data = convert_to_ocsf(scan_id, scan.target_url, vulnerabilities)
+        return Response(content=json.dumps(ocsf_data, indent=2), media_type="application/json")
     else:
-        # Default JSON format
+        # Default JSON format with enhanced summary
+        severity_counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0, "Informational": 0}
+        type_counts = {}
+
+        for v in vulnerabilities:
+            # Severity Count
+            risk = v.risk
+            if risk in severity_counts:
+                severity_counts[risk] += 1
+            else:
+                severity_counts.setdefault(risk, 0)
+                severity_counts[risk] += 1
+            
+            # Type Count (Group by Alert Name)
+            alert_name = v.alert
+            type_counts[alert_name] = type_counts.get(alert_name, 0) + 1
+
         return ScanResult(
             scan_id=scan_id,
             vulnerabilities=vulnerabilities,
-            summary={"count": len(vulnerabilities)},
+            summary={
+                "count": len(vulnerabilities),
+                "severity_counts": severity_counts,
+                "type_counts": type_counts
+            },
             format=ReportFormat.JSON
         )
 

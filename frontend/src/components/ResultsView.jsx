@@ -16,7 +16,7 @@ const ResultsView = () => {
                 setStatus(statusRes.data);
 
                 if (statusRes.data.state === 'COMPLETED') {
-                    const res = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/scan/${id}/results`);
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL || ''}/api/scan/${id}/results`, { params: { format: 'JSON' } });
                     setResults(res.data);
                 }
             } catch (error) {
@@ -124,21 +124,34 @@ const ResultsView = () => {
                         </button>
                     )}
                     {status?.state === 'COMPLETED' && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setExportOpen(!exportOpen)}
-                                className="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded text-sm font-medium hover:bg-slate-50 shadow-sm flex items-center gap-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                Export Report
-                            </button>
-                            {exportOpen && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-100 z-10 py-1">
-                                    <button onClick={() => handleExport('JSON')} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">JSON (Raw)</button>
-                                    <button onClick={() => handleExport('SARIF')} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">SARIF (GitHub)</button>
-                                    <button onClick={() => handleExport('OCSF')} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">OCSF (Schema)</button>
-                                </div>
+                        <div className="flex gap-2">
+                            {/* Recommended Download Button */}
+                            {status?.report_format && status.report_format !== 'JSON' && (
+                                <button
+                                    onClick={() => handleExport(status.report_format)}
+                                    className="bg-indigo-600 text-white border border-transparent px-4 py-2 rounded text-sm font-medium hover:bg-indigo-700 shadow-sm flex items-center gap-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    Download {status.report_format}
+                                </button>
                             )}
+
+                            <div className="relative">
+                                <button
+                                    onClick={() => setExportOpen(!exportOpen)}
+                                    className="bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded text-sm font-medium hover:bg-slate-50 shadow-sm flex items-center gap-2"
+                                >
+                                    {status?.report_format && status.report_format !== 'JSON' ? 'Other Formats' : 'Export Report'}
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                {exportOpen && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-100 z-10 py-1">
+                                        <button onClick={() => handleExport('JSON')} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">JSON (Raw)</button>
+                                        <button onClick={() => handleExport('SARIF')} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">SARIF (GitHub)</button>
+                                        <button onClick={() => handleExport('OCSF')} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">OCSF (Schema)</button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -158,6 +171,44 @@ const ResultsView = () => {
                 </div>
             )}
 
+            {/* Summary Section */}
+            {status?.state === 'COMPLETED' && results?.summary?.severity_counts && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Severity Breakdown */}
+                    <div className="bg-white border border-slate-200 rounded p-6">
+                        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Severity Breakdown</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            {Object.entries(results.summary.severity_counts).map(([risk, count]) => (
+                                count > 0 && (
+                                    <div key={risk} className={`p-4 rounded border text-center ${getRiskClass(risk)} bg-opacity-10 border-opacity-50`}>
+                                        <div className="text-2xl font-bold">{count}</div>
+                                        <div className="text-xs uppercase font-medium opacity-75">{risk}</div>
+                                    </div>
+                                )
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Vulnerability Types */}
+                    <div className="bg-white border border-slate-200 rounded p-6">
+                        <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4">Top Vulnerability Types</h3>
+                        <div className="space-y-3">
+                            {results.summary.type_counts && Object.entries(results.summary.type_counts)
+                                .sort(([, a], [, b]) => b - a)
+                                .slice(0, 5)
+                                .map(([type, count]) => (
+                                    <div key={type} className="flex justify-between items-center text-sm border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                                        <span className="text-slate-700 font-medium truncate pr-4">{type}</span>
+                                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-bold">{count}</span>
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Vulnerability Index */}
             {status?.state === 'COMPLETED' && results && (
                 <div className="bg-white border border-slate-200 rounded shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">

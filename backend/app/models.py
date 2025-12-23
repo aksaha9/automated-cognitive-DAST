@@ -42,6 +42,7 @@ class ScanStatus(BaseModel):
     target_url: str
     spider_id: Optional[str] = None
     ascan_id: Optional[str] = None
+    report_format: Optional[ReportFormat] = ReportFormat.JSON
 
 class Vulnerability(BaseModel):
     alert: str
