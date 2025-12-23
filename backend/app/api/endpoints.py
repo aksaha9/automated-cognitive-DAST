@@ -55,13 +55,7 @@ async def run_scan_task(scan_id: str, target_url: str):
         scans[scan_id].state = ScanState.FAILED
 
 
-@router.post("/scan/{scan_id}/stop")
-async def stop_scan(scan_id: str):
-    if scan_id not in scans:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    scan = scans[scan_id]
-    zap_service.stop_scan(spider_id=getattr(scan, 'spider_id', None), ascan_id=getattr(scan, 'ascan_id', None))
+
 @router.post("/scan/{scan_id}/stop")
 async def stop_scan(scan_id: str):
     if scan_id not in scans:
@@ -86,8 +80,7 @@ async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
         state=ScanState.PENDING,
         progress=0,
         created_at=datetime.now(),
-        progress=0,
-        created_at=datetime.now(),
+
         target_url=target_url,
         report_format=request.report_format
     )
@@ -213,10 +206,7 @@ async def get_scan_results(scan_id: str, format: ReportFormat = None):
         format = scan.report_format
     elif not format:
         format = ReportFormat.JSON
-    if scan_id not in scans:
-        raise HTTPException(status_code=404, detail="Scan not found")
-    
-    scan = scans[scan_id]
+
     
     # Retrieve alerts from ZAP for this target
     raw_alerts = zap_service.get_alerts(scan.target_url)
