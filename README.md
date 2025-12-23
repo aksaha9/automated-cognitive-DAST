@@ -55,7 +55,7 @@ The primary way to use the tool is via the Dashboard.
     *   **Standard**: Choose "Web App" or "API".
     *   **AI Assisted**: Select the "AI Assisted" tab.
 4.  **Prompt (AI Mode)**: Describe your goal.
-    *   *Example*: "I want to check if this target is susceptible to data harvesting attacks."
+    *   *Example*: "Can this target site be exploited for getting unauthorised data out and leaked?"
 5.  **Scan**: Click "Start Scan". The system will analyze your request, configure ZAP, and stream progress.
 6.  **Results**: View findings in the interactive report or export to JSON/SARIF.
 

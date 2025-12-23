@@ -6,13 +6,13 @@ We have deployed a live instance of the application on Google Cloud Run. You can
 
 ## 2. AI Assisted Scan Verification
 The following recording demonstrates an AI-Assisted scan running on the public instance.
-**Scenario**: The user asks the AI to "check if this target is susceptible to data harvesting attacks" on `https://example.com`.
+**Scenario**: The user asks the AI to **"Can this target site be exploited for getting unauthorised data out and leaked?"** on `https://example.com`.
 **Process**:
 1.  User inputs natural language prompt.
 2.  Gemini analyzes intent and configures ZAP.
 3.  Scan executes and results are displayed.
 
-![AI Assisted Scan Demo](docs/images/ai_scan_demo.webp)
+![AI Assisted Scan Demo](docs/images/ai_scan_data_leak_check.webp)
 
 ## 3. Ephemeral Headless Scan Verification
 We verified the **Ephemeral Job** functionality using the Google Cloud CLI. This mode bypasses the UI and runs the scan as a serverless job.
@@ -22,18 +22,18 @@ We verified the **Ephemeral Job** functionality using the Google Cloud CLI. This
 gcloud run jobs execute zap-mcp-server-job \
   --region us-central1 \
   --args="--url=https://example.com" \
-  --args="--ai-prompt=I want to check if this target is susceptible to data harvesting attacks"
+  --args="--ai-prompt=Can this target site be exploited for getting unauthorised data out and leaked?"
 ```
 
 **Execution Output:**
 ```console
 ✓ Creating execution...
   ✓ Provisioning resources... Provisioned imported containers.
-Done.                 
-Execution [zap-mcp-server-job-c5888] has successfully started running.
+Done.
+Execution [zap-mcp-server-job-5xs7m] has successfully started running.
 
 View details about this execution by running:
-gcloud run jobs executions describe zap-mcp-server-job-c5888
+gcloud run jobs executions describe zap-mcp-server-job-5xs7m
 ```
 
 ## 4. Cloud Run Deployment Guide
