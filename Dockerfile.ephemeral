@@ -18,6 +18,7 @@ RUN pip3 install fastmcp requests --break-system-packages
 # Copy files
 COPY zap_mcp_server.py /home/zap/zap_mcp_server.py
 COPY entrypoint.sh /home/zap/entrypoint.sh
+COPY config/llm_config.json /home/zap/llm_config.json
 
 # Set permissions (no chown needed)
 RUN chmod 644 /home/zap/zap_mcp_server.py && \

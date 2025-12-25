@@ -21,8 +21,10 @@ We verified the **Ephemeral Job** functionality using the Google Cloud CLI. This
 ```bash
 gcloud run jobs execute zap-mcp-server-job \
   --region us-central1 \
-  --args="--url=https://example.com" \
-  --args="--ai-prompt=Can this target site be exploited for getting unauthorised data out and leaked?"
+  --args="--target=https://example.com" \
+  --args="--vuln=I want to check if this target is susceptible to data harvesting attacks" \
+  --args="--format=sarif" \
+  --args="--output=report.json"
 ```
 
 **Execution Output:**

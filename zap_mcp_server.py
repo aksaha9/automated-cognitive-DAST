@@ -133,6 +133,7 @@ Generate only the relevant config lines with threshold FAIL.
         "/zap/zap-full-scan.py",
         "-t", target_url,
         "-c", conf_path,
+        "-z", "-config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true",
         report_flag, f"/zap/wrk/{report_filename}"
     ]
 

@@ -39,11 +39,11 @@ steps:
         gcloud run jobs deploy zap-mcp-server-job \
           --image gcr.io/$PROJECT_ID/zap-mcp-server:latest \
           --region us-central1 \
-          --memory 2Gi \
+          --memory 4Gi \
           --cpu 2 \
           --task-timeout 1800 \
           --max-retries 0 \
-          --set-env-vars=REPORTS_DIR=/reports
+          --set-env-vars=REPORTS_DIR=/home/zap/reports
 
   # 3. Deploy Persistent Service (Web App)
   # Uses default CMD (./start_service.sh)

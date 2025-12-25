@@ -6,7 +6,7 @@ set -o pipefail
 TARGET_URL=""
 VULN_DESC=""
 REPORT_FORMAT="html"
-REPORTS_DIR="/reports"
+REPORTS_DIR="/home/zap/reports"
 export REPORTS_DIR
 CONFIG_DIR="/config"
 
@@ -34,16 +34,34 @@ show_help() {
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --target=*)
+            TARGET_URL="${1#*=}"
+            shift
+            ;;
         --target)
             TARGET_URL="$2"
             shift 2
+            ;;
+        --vuln=*)
+            VULN_DESC="${1#*=}"
+            shift
             ;;
         --vuln)
             VULN_DESC="$2"
             shift 2
             ;;
+        --format=*)
+            REPORT_FORMAT="${1#*=}"
+            shift
+            ;;
         --format|-f)
             REPORT_FORMAT="$2"
+            shift 2
+            ;;
+        --output=*)
+            shift
+            ;;
+        --output)
             shift 2
             ;;
         -h|--help)
@@ -65,13 +83,20 @@ fi
 # Ensure config and reports dirs exist
 mkdir -p "$REPORTS_DIR"
 
-# Copy llm_config.json into working dir if it exists
-if [[ -f "$CONFIG_DIR/llm_config.json" ]]; then
+# Check for configuration file precedence:
+# 1. Baked-in config (/home/zap/llm_config.json)
+# 2. Mounted config ($CONFIG_DIR/llm_config.json)
+# 3. GEMINI_API_KEY environment variable
+
+if [[ -f "/home/zap/llm_config.json" ]]; then
+    echo "Info: Using baked-in configuration."
+elif [[ -f "$CONFIG_DIR/llm_config.json" ]]; then
     cp "$CONFIG_DIR/llm_config.json" /home/zap/llm_config.json
+    echo "Info: Using mounted configuration from $CONFIG_DIR."
 elif [[ -n "$GEMINI_API_KEY" ]]; then
     echo "Info: llm_config.json not found, using GEMINI_API_KEY from environment."
 else
-    echo "Error: llm_config.json not found in mounted /config directory AND GEMINI_API_KEY not set!"
+    echo "Error: llm_config.json not found (baked-in or mounted) AND GEMINI_API_KEY not set!"
     exit 1
 fi
 
