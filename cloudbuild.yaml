@@ -43,7 +43,9 @@ steps:
           --cpu 2 \
           --task-timeout 1800 \
           --max-retries 0 \
-          --set-env-vars=REPORTS_DIR=/home/zap/reports
+          --service-account=${_SERVICE_ACCOUNT} \
+          --set-secrets=/config/llm_config.json=llm_config:latest \
+          --set-env-vars=REPORTS_DIR=/home/zap/reports,GCS_REPORT_BUCKET=${_GCS_REPORT_BUCKET}
 
   # 3. Deploy Persistent Service (Web App)
   # Uses default CMD (./start_service.sh)

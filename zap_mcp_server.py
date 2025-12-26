@@ -80,6 +80,90 @@ def call_llm(prompt: str) -> str:
         raise ValueError(f"Unexpected Gemini response: {result}")
 
 
+import datetime
+
+def _get_timestamped_filename(format_ext: str) -> str:
+    # scan_report_<format>_yyyymmdd_hhmm_tz.json
+    now = datetime.datetime.now(datetime.timezone.utc)
+    # Using UTC as tz
+    ts_str = now.strftime("%Y%m%d_%H%M_UTC")
+    return f"scan_report_{format_ext}_{ts_str}.json"
+
+def _parse_scan_stats(report_path: str, report_format: str) -> str:
+    """Parses JSON report (ZAP format or SARIF) to extract stats."""
+    try:
+        with open(report_path, "r") as f:
+            data = json.load(f)
+        
+        # Detect ZAP JSON format (has "site" array)
+        if "site" in data:
+            alerts = []
+            for site in data["site"]:
+                alerts.extend(site.get("alerts", []))
+                
+            total = len(alerts)
+            # Group by Name and Risk Code/Desc
+            # Mapping: 3=High, 2=Med, 1=Low, 0=Info
+            severity_counts = {"3": 0, "2": 0, "1": 0, "0": 0} 
+            severity_names = {"3": "High", "2": "Medium", "1": "Low", "0": "Info"}
+            
+            finding_counts = {} # Key: Name, Value: {count, risk}
+
+            for alert in alerts:
+                risk_code = alert.get("riskcode", "0")
+                risk_desc = alert.get("riskdesc", "Unknown")
+                name = alert.get("name", "Unknown")
+                
+                if risk_code in severity_counts:
+                    severity_counts[risk_code] += 1
+                
+                if name not in finding_counts:
+                    finding_counts[name] = {"count": 0, "risk": risk_desc}
+                finding_counts[name]["count"] += 1
+
+            stats = f"Total Vulnerabilities: {total}\n\nSeverity Breakdown:\n"
+            for code in ["3", "2", "1", "0"]:
+                stats += f"  {severity_names[code]}: {severity_counts[code]}\n"
+            
+            stats += "\nFinding Breakdown (Count | Risk | Name):\n"
+            # Sort by risk code desc (3->0) then count
+            def sort_key(item):
+                name, data = item
+                # Sort by count frequency
+                return data["count"]
+
+            for name, info in sorted(finding_counts.items(), key=lambda x: x[1]["count"], reverse=True):
+                 stats += f"  - {info['count']} | {info['risk']} | {name}\n"
+            
+            return stats
+
+        # Detect SARIF format (has "runs" array)
+        elif "runs" in data:
+            results = []
+            for run in data.get("runs", []):
+                results.extend(run.get("results", []))
+            
+            total = len(results)
+            rule_counts = {}
+            
+            for res in results:
+                rule_id = res.get("ruleId", "Unknown")
+                # text message might contain risk info?
+                msg = res.get("message", {}).get("text", "")
+                level = res.get("level", "none") # warning, error, note
+                
+                key = f"{rule_id} ({level})"
+                rule_counts[key] = rule_counts.get(key, 0) + 1
+            
+            stats = f"Total Results: {total}\n\nRule Breakdown:\n"
+            for rkey, count in sorted(rule_counts.items(), key=lambda x: x[1], reverse=True):
+                stats += f"  - {rkey}: {count}\n"
+            return stats
+            
+        return "(Report structure not recognized - neither ZAP JSON site[] nor SARIF runs[])"
+    except Exception as e:
+        return f"(Failed to parse stats: {e})"
+
 def _perform_dast_scan_logic(target_url: str, vulnerability_description: str, report_format: str = "html") -> str:
     prompt = f"""
 User wants to test for: {vulnerability_description}
@@ -97,84 +181,99 @@ Generate only the relevant config lines with threshold FAIL.
     reports_dir = os.path.abspath(os.getenv("REPORTS_DIR", "reports"))
     os.makedirs(reports_dir, exist_ok=True)
 
-    # Write config to /zap/wrk/scan.conf to satisfy ZAP's check
+    # Write config to /zap/wrk/scan.conf
     conf_path = "/zap/wrk/scan.conf"
     with open(conf_path, "w") as f:
         f.write(config_content)
 
-    # Determine report flag and filename based on format
-    # zap-full-scan.py options: -r (html), -J (json), -w (md), -x (xml)
+    # Determine format and Generate Timestamped Filename
     report_format = report_format.lower()
     
     if report_format == "json":
         report_flag = "-J"
-        report_filename = "zap_report.json"
+        file_ext = "json"
     elif report_format == "md" or report_format == "markdown":
         report_flag = "-w"
-        report_filename = "zap_report.md"
+        file_ext = "md"
     elif report_format == "xml":
         report_flag = "-x"
-        report_filename = "zap_report.xml"
+        file_ext = "xml"
     elif report_format == "sarif":
-        # Note: zap-full-scan.py doesn't have a direct -sarif flag. 
-        # We'll use JSON as a fallback/closest match for this script's scope
-        # unless we use the API, which is complex here.
-        # Alternatively, newer ZAP *might* support -r report.sarif? 
-        # Let's use JSON to be safe and ensure data extraction works.
+        # Use JSON output for SARIF
         report_flag = "-J"
-        report_filename = "zap_report.sarif.json"
+        file_ext = "sarif" # Filename identifier
     else:
-        # Default to HTML
         report_flag = "-r"
-        report_filename = "zap_report.html"
+        file_ext = "html"
 
-    # Pass absolute paths pointing to /zap/wrk to satisfy ZAP's check
+    # Generate the requested filename pattern
+    final_filename = _get_timestamped_filename(file_ext)
+    
+    # Internal filename for ZAP to write to (in /zap/wrk)
+    
+    # Pass absolute paths pointing to /zap/wrk
     cmd = [
         "/zap/zap-full-scan.py",
         "-t", target_url,
         "-c", conf_path,
         "-z", "-config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true",
-        report_flag, f"/zap/wrk/{report_filename}"
+        report_flag, f"/zap/wrk/{final_filename}"
     ]
 
     result = subprocess.run(cmd, capture_output=True, text=True)
     if os.path.exists(conf_path):
         os.unlink(conf_path)
 
-    # ZAP scan scripts might return 0, 1, or 2. 
-    # Logic: if report is generated, we consider it a success for our purpose (extracting results).
-    
     # Move report to reports_dir
-    src_report = f"/zap/wrk/{report_filename}"
-    dest_report = os.path.join(reports_dir, report_filename)
+    src_report = f"/zap/wrk/{final_filename}"
+    dest_report = os.path.join(reports_dir, final_filename)
     
+    scan_success = False
     if os.path.exists(src_report):
         import shutil
         shutil.copy2(src_report, dest_report)
         os.unlink(src_report)
+        scan_success = True
     elif result.returncode not in [0, 1]: 
-        # If report missing and return code indicates failure (not 0 or 1 usually means compliance fail)
-        # Actually 1 means "issues found", 2 means "failure". 
         return f"ZAP scan failed:\n{result.stderr}"
 
-    if not os.path.exists(dest_report):
+    if not scan_success or not os.path.exists(dest_report):
         return f"Scan completed (Return Code: {result.returncode}) but report file not generated.\nStderr: {result.stderr}"
 
-    # Read report content for summary (truncated)
-    try:
-        with open(dest_report, "r", encoding="utf-8") as f:
-            report_content = f.read()
-            preview = report_content[:2000] + "..." if len(report_content) > 2000 else report_content
-    except Exception:
-        preview = "(Preview unavailable)"
+    # Generate Stats Preview (instead of raw text)
+    if report_format in ["json", "sarif"]:
+        preview = _parse_scan_stats(dest_report, report_format)
+    else:
+         # Fallback for HTML/MD/XML
+        preview = "(Structured stats not available for this format)"
+
+    # Upload to GCS if configured
+    gcs_bucket = os.getenv("GCS_REPORT_BUCKET")
+    gcs_uri = "Not configured"
+    
+    if gcs_bucket and os.path.exists(dest_report):
+        try:
+            from google.cloud import storage
+            storage_client = storage.Client()
+            bucket = storage_client.bucket(gcs_bucket)
+            # Use same filename structure in GCS: scan_reports/<filename>
+            blob_name = f"scan_reports/{final_filename}"
+            blob = bucket.blob(blob_name)
+            blob.upload_from_filename(dest_report)
+            gcs_uri = f"gs://{gcs_bucket}/{blob_name}"
+            print(f"Report uploaded to: {gcs_uri}")
+        except Exception as e:
+            gcs_uri = f"Upload failed: {str(e)}"
+            print(gcs_uri)
 
     summary = (
         f"DAST scan completed for {target_url}\n"
         f"Focus: {vulnerability_description}\n"
         f"Format: {report_format}\n\n"
         f"Generated config:\n{config_content}\n\n"
-        f"Full report saved to: ./reports/{report_filename}\n"
-        f"Report preview:\n{preview}"
+        f"Full report saved to (Local): ./reports/{final_filename}\n"
+        f"GCS Report URI: {gcs_uri}\n"
+        f"Scan Statistics:\n{preview}"
     )
 
     return summary

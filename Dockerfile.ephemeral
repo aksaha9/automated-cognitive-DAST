@@ -13,12 +13,12 @@ RUN apt-get update && \
 RUN ln -sf /usr/bin/python3 /usr/bin/python
 
 # Install Python dependencies (bypass externally managed env)
-RUN pip3 install fastmcp requests --break-system-packages
+RUN pip3 install fastmcp requests google-cloud-storage --break-system-packages
 
 # Copy files
 COPY zap_mcp_server.py /home/zap/zap_mcp_server.py
 COPY entrypoint.sh /home/zap/entrypoint.sh
-COPY config/llm_config.json /home/zap/llm_config.json
+
 
 # Set permissions (no chown needed)
 RUN chmod 644 /home/zap/zap_mcp_server.py && \
