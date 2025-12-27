@@ -11,6 +11,7 @@ This platform bridges the gap between traditional security scanning tools (OWASP
 *   **🧠 Cognitive Intelligence**: Translates natural language prompts (e.g., *"Check for IDOR in the payment flow"*) into specific ZAP Active Scan policies.
 *   **🛡️ Enterprise Ready**:
     *   **Secure**: Zero hardcoded secrets using Google Secret Manager.
+    *   **Protected**: Built-in Prompt Injection mitigation (sanitization, length limits, and keyword blocking).
     *   **Compliant**: Auto-uploads timestamped SARIF/JSON reports to Google Cloud Storage (GCS).
     *   **Scalable**: Built on Google Cloud Run with a unified container architecture.
 *   **⚡ Dual Operations Mode**:

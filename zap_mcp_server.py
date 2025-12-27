@@ -80,7 +80,44 @@ def call_llm(prompt: str) -> str:
         raise ValueError(f"Unexpected Gemini response: {result}")
 
 
+import re
 import datetime
+
+def _sanitize_prompt(prompt: str) -> str:
+    """
+    Sanitizes the user prompt to mitigate injection risks.
+    - Limits length to 300 characters.
+    - Blocks known jailbreak/override keywords.
+    - Removes non-printable characters.
+    """
+    if not prompt:
+        return ""
+        
+    # 1. Length Limit
+    if len(prompt) > 300:
+        raise ValueError("Prompt exceeds maximum length of 300 characters.")
+        
+    # 2. Blocklist Check (Case-insensitive)
+    # Phrases preventing system prompt override
+    blocklist = [
+        r"ignore (all )?rules", 
+        r"ignore (all )?instructions",
+        r"system prompt", 
+        r"override",
+        r"unrestricted",
+        r"jailbreak"
+    ]
+    
+    prompt_lower = prompt.lower()
+    for pattern in blocklist:
+        if re.search(pattern, prompt_lower):
+            raise ValueError(f"Prompt contains restricted keyword/phrase: '{pattern}'")
+
+    # 3. Clean Characters (Allow alphanumeric, punctuation, common whitespace)
+    # Remove control characters (except newline/tab)
+    prompt = "".join(ch for ch in prompt if ch.isprintable() or ch in "\n\t")
+    
+    return prompt.strip()
 
 def _get_timestamped_filename(format_ext: str) -> str:
     # scan_report_<format>_yyyymmdd_hhmm_tz.json
@@ -171,6 +208,12 @@ def _parse_scan_stats(report_path: str, report_format: str) -> str:
         return f"(Failed to parse stats: {e})"
 
 def _perform_dast_scan_logic(target_url: str, vulnerability_description: str, report_format: str = "html") -> str:
+    try:
+        # Sanitize input to prevent prompt injection
+        vulnerability_description = _sanitize_prompt(vulnerability_description)
+    except ValueError as e:
+        return f"Scan Request Rejected: {str(e)}"
+
     prompt = f"""
 User wants to test for: {vulnerability_description}
 
