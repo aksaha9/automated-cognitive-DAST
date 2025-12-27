@@ -11,3 +11,5 @@ reports/
 
 local_files/
 
+
+.DS_Store

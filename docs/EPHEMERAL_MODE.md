@@ -9,7 +9,7 @@ Traditional DAST tools are often heavy, long-running processes that require dedi
 ## Topology & Flow
 The ephemeral job bypasses the UI and interacts directly with the orchestration logic via CLI arguments.
 
-![Ephemeral Topology](../designs/ephemeral_topology.svg)
+![Ephemeral Topology](../Design/media/ephemeral_topology.svg)
 
 ## How It Works
 The system uses the same Docker image as the service, but triggers a dedicated entrypoint script (`job_runner.py`).

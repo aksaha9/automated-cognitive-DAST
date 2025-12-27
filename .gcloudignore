@@ -8,3 +8,5 @@ local_files/
 .git
 .gitignore
 !config/llm_config.json
+
+.DS_Store
