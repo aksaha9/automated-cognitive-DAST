@@ -61,3 +61,29 @@ gcloud builds submit --config cloudbuild.yaml \
   .
 ```
 This builds the unified Docker image and deploys both the **Service** (UI) and the **Job** (Ephemeral).
+
+## 5. Metrics Fix & Verification
+
+### Issue Identified
+Ephemeral scans were reporting a vulnerability count of "1" for all vulnerability types, treating ZAP alert groups as single findings.
+
+### Fix Verification
+We updated the parser to respect the `count` field in ZAP alerts and verified it in both environments.
+
+#### Local Verification
+Built the `dast-ephemeral` image from scratch and ran it detached from the main stack:
+```bash
+docker build --no-cache -f Dockerfile.ephemeral -t dast-ephemeral .
+docker run --rm -e GEMINI_API_KEY=$GEMINI_API_KEY dast-ephemeral --target https://example.com --vuln "I want to check for weaknesses in the target for data harvesting attacks" --format sarif
+```
+
+#### Cloud Verification
+Deployed the fix and executed the Cloud Run Job:
+```bash
+gcloud builds submit --config cloudbuild.yaml --substitutions=_SERVICE_ACCOUNT=<REDACTED>,_GCS_REPORT_BUCKET=<REDACTED> .
+gcloud run jobs execute zap-mcp-server-job --region us-central1 --args="--target=https://example.com" --args="--vuln=I want to check if this target is susceptible to data harvesting attacks" --args="--format=sarif" --args="--output=report.json"
+
+# Read Logs
+gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=zap-mcp-server-job AND labels.\"run.googleapis.com/execution_name\"=<EXECUTION_NAME>" --limit 100 --format="value(textPayload)"
+```
+**Result**: The cloud logs verified correct aggregated counts (Total: 35).

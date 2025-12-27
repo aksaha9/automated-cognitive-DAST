@@ -101,7 +101,7 @@ def _parse_scan_stats(report_path: str, report_format: str) -> str:
             for site in data["site"]:
                 alerts.extend(site.get("alerts", []))
                 
-            total = len(alerts)
+            total = 0
             # Group by Name and Risk Code/Desc
             # Mapping: 3=High, 2=Med, 1=Low, 0=Info
             severity_counts = {"3": 0, "2": 0, "1": 0, "0": 0} 
@@ -113,13 +113,19 @@ def _parse_scan_stats(report_path: str, report_format: str) -> str:
                 risk_code = alert.get("riskcode", "0")
                 risk_desc = alert.get("riskdesc", "Unknown")
                 name = alert.get("name", "Unknown")
+                try:
+                    count = int(alert.get("count", 1))
+                except (ValueError, TypeError):
+                    count = 1
                 
+                total += count
+
                 if risk_code in severity_counts:
-                    severity_counts[risk_code] += 1
+                    severity_counts[risk_code] += count
                 
                 if name not in finding_counts:
                     finding_counts[name] = {"count": 0, "risk": risk_desc}
-                finding_counts[name]["count"] += 1
+                finding_counts[name]["count"] += count
 
             stats = f"Total Vulnerabilities: {total}\n\nSeverity Breakdown:\n"
             for code in ["3", "2", "1", "0"]:
