@@ -1,0 +1,40 @@
+@startuml
+!theme plain
+title Ephemeral AI Scan Sequence (Headless)
+
+participant "Cloud Scheduler /\nCI/CD" as Trigger
+participant "Cloud Run Job" as Job
+participant "Secret Manager" as Secrets
+participant "Gemini (LLM)" as Gemini
+participant "ZAP (Local)" as ZAP
+participant "GCS Bucket" as GCS
+
+Trigger -> Job : Execute (Arguments:\n--target, --vuln)
+activate Job
+
+Job -> Secrets : Fetch API Key
+activate Secrets
+Secrets --> Job : GEMINI_API_KEY
+deactivate Secrets
+
+Job -> Gemini : Generate Config (Prompt + Known Rules)
+activate Gemini
+Gemini --> Job : Custom Scan Policy (Rules -> FAIL)
+deactivate Gemini
+
+Job -> ZAP : Run zap-full-scan.py\n(With Generated Config)
+activate ZAP
+ZAP -> ZAP : Spider Target
+ZAP -> ZAP : Active Scan (Focused Rules)
+ZAP --> Job : Report (JSON/SARIF)
+deactivate ZAP
+
+Job -> Job : Parse Stats (Vuln Counts)
+Job -> GCS : Upload Report
+activate GCS
+GCS --> Job : gs:// URI
+deactivate GCS
+
+Job -> Trigger : Exit 0 (Summary in Logs)
+deactivate Job
+@enduml

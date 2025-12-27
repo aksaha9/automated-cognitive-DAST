@@ -1,0 +1,39 @@
+@startuml
+!theme plain
+title GUI AI Scan Sequence
+
+actor User
+participant "Frontend (React)" as GUI
+participant "Backend API" as API
+participant "LLM Service" as LLM
+participant "ZAP Service" as ZAP
+participant "Target System" as Target
+
+User -> GUI : Enable "AI Assisted" & Enter Prompt
+GUI -> API : POST /analyze {prompt}
+activate API
+API -> LLM : analyze_intent(prompt)
+activate LLM
+LLM -> API : {scan_type, checks, reasoning} (Analyzed Config)
+deactivate LLM
+API -> GUI : Return Analysis
+deactivate API
+
+User -> GUI : Confirm & Start Scan
+GUI -> API : POST /scan {target, config}
+activate API
+API -> ZAP : Start Spider (Target)
+activate ZAP
+ZAP -> Target : Spider Loop
+ZAP -> API : Spider Status
+deactivate ZAP
+
+API -> ZAP : Start Active Scan (Target, Policy)
+activate ZAP
+ZAP -> Target : Attack Loop (Filtered Rules)
+ZAP -> API : Scan Progress
+deactivate ZAP
+
+API -> GUI : Stream Progress & Results
+deactivate API
+@enduml

@@ -1,0 +1,53 @@
+@startuml
+!theme plain
+title System Topology: Automated Cognitive DAST
+
+actor "User / CI/CD" as User
+cloud "Google Cloud Platform" {
+    package "Cloud Run" {
+        component "Web Service\n(Container)" as WebApp {
+            [Frontend (React)]
+            [Backend API (FastAPI)]
+            [ZAP Service]
+            [LLM Service]
+        }
+        
+        component "Ephemeral Job\n(Container)" as Job {
+            [MCP Server / script]
+            [ZAP Instance (Headless)]
+        }
+    }
+    
+    database "Secret Manager" as Secrets
+    storage "GCS Bucket" as Storage
+}
+
+cloud "External Services" {
+    component "Google Gemini API\n(LLM)" as Gemini
+    component "Target Application" as Target
+}
+
+' Relationships
+User --> WebApp : HTTPS (UI/API)
+User --> Job : gcloud run jobs execute
+
+WebApp --> Gemini : Analyze Intent
+WebApp --> Target : DAST Scan
+WebApp --> Secrets : Read Config (Optional)
+
+Job --> Gemini : Generate Config (MCP)
+Job --> Target : DAST Scan
+Job --> Secrets : Fetch API Key
+Job --> Storage : Upload Report
+
+note right of Job
+  "Fire and Forget"
+  Serverless Execution
+end note
+
+note left of WebApp
+  Interactive Mode
+  Real-time Progress
+end note
+
+@enduml

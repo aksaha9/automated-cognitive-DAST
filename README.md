@@ -1,77 +1,79 @@
 # Automated Cognitive DAST
 
-**Author**: Ashish Kumar Saha  
-*API Security Engineering Lead*
+> **Next-Generation Dynamic Application Security Testing powered by Generative AI.**
 
-## Introduction
-
-### Why?
-Security testing is often complex, requiring deep expertise to configure tools like OWASP ZAP correctly. "One-size-fits-all" scans take too long and miss context.
-
-### What?
-**Automated Cognitive DAST** is a next-generation security scanner that combines the power of the **OWASP ZAP** engine with the intelligence of **Google Gemini 1.5 Pro**. It uses Generative AI to translate natural language intentions (e.g., "Check for data leaks") into precise, optimized security scans.
-
-### How?
-The system runs in a unified container on Google Cloud Run. It accepts high-level prompts, consults an LLM to design a scan policy, and then orchestrates ZAP to execute that policy against the target.
+This platform bridges the gap between traditional security scanning tools (OWASP ZAP) and modern Large Language Models (Google Gemini). It enables security engineers to express testing requirements in natural language, which the system translates into precise, optimized, and compliant security scans.
 
 ---
 
-## 🚀 Live Demo
-Access the public instance running on Google Cloud Run:
-👉 **[Public Cloud Instance](https://automated-cognitive-dast-service-510071073932.us-central1.run.app/)**
+## 🚀 Key Features
+
+*   **🧠 Cognitive Intelligence**: Translates natural language prompts (e.g., *"Check for IDOR in the payment flow"*) into specific ZAP Active Scan policies.
+*   **🛡️ Enterprise Ready**:
+    *   **Secure**: Zero hardcoded secrets using Google Secret Manager.
+    *   **Compliant**: Auto-uploads timestamped SARIF/JSON reports to Google Cloud Storage (GCS).
+    *   **Scalable**: Built on Google Cloud Run with a unified container architecture.
+*   **⚡ Dual Operations Mode**:
+    *   **Interactive (GUI)**: Real-time analysis and feedback for engineers.
+    *   **Ephemeral (Headless)**: "Fire-and-forget" jobs optimized for CI/CD pipelines.
 
 ---
 
-## Architecture & Topology
+## 🏗️ Architecture
 
-The system uses a unified container architecture to deliver low-latency performance in a serverless environment.
+The system uses a unified container design to deliver both the UI and the Ephemeral logic.
 
-![System Topology](designs/topology.svg)
-
-For a detailed breakdown of the internal components and execution flow, see:
-📄 **[Architecture Documentation](docs/ARCHITECTURE.md)**
+*   **📖 [Deep Dive Architecture](docs/ARCHITECTURE.md)**: Detailed breakdown of components, topology diagrams (Mermaid), and execution flows.
+*   **🛠️ [Design Resources](Design/)**: Editable Source PUML files for system topology and sequence diagrams.
 
 ---
 
-## Ephemeral Mode
+## 🚦 Getting Started
 
-In addition to the UI, this tool supports **Ephemeral Headless Scans**. These are "fire-and-forget" jobs perfect for CI/CD pipelines.
+### 1. Local Development
+Run the full stack (Frontend, Backend, ZAP) locally using Docker Compose.
 
-![Ephemeral Topology](designs/ephemeral_topology.svg)
+**Prerequisites**: Docker Desktop, Google Gemini API Key.
 
-Learn how to trigger automated jobs via CLI or Cloud Scheduler:
-📄 **[Ephemeral Mode Documentation](docs/EPHEMERAL_MODE.md)**
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/aksaha9/automated-cognitive-DAST.git
+    cd automated-cognitive-DAST
+    ```
+2.  Set your API Key:
+    ```bash
+    export GEMINI_API_KEY="your_api_key_here"
+    ```
+3.  Launch:
+    ```bash
+    docker compose up --build
+    ```
+4.  Access the UI at `http://localhost:5173`.
 
----
+### 2. Cloud Deployment (Secure)
+Deploy to Google Cloud Run using Cloud Build. This method ensures **no sensitive data is hardcoded** in your repository.
 
-## Usage Instructions
+**Prerequisites**: 
+*   Google Cloud Project with Cloud Run & Secret Manager APIs enabled.
+*   A Service Account with necessary permissions.
+*   A GCS Bucket for report storage.
 
-### 1. Web App & API Scanning (UI)
-The primary way to use the tool is via the Dashboard.
-
-1.  **Launch**: Open the [Live Demo](https://automated-cognitive-dast-service-510071073932.us-central1.run.app/) or your local instance.
-2.  **Target**: Enter the URL to scan (e.g., `https://example.com`).
-3.  **Mode Selection**:
-    *   **Standard**: Choose "Web App" or "API".
-    *   **AI Assisted**: Select the "AI Assisted" tab.
-4.  **Prompt (AI Mode)**: Describe your goal.
-    *   *Example*: "Can this target site be exploited for getting unauthorised data out and leaked?"
-5.  **Scan**: Click "Start Scan". The system will analyze your request, configure ZAP, and stream progress.
-6.  **Results**: View findings in the interactive report or export to JSON/SARIF.
-
-### 2. Local Deployment
-To run the full stack locally:
-
+**Deployment Command**:
 ```bash
-# Clone the repo
-git clone https://github.com/aksaha9/automated-cognitive-DAST.git
-
-# Start with Docker Compose
-docker compose up --build
+gcloud builds submit --config cloudbuild.yaml \
+  --substitutions=_SERVICE_ACCOUNT=your-sa@project.iam.gserviceaccount.com,_GCS_REPORT_BUCKET=your-report-bucket \
+  .
 ```
-Access at `http://localhost:5173`.
 
 ---
 
-## License
+## 🧪 Verification & Walkthrough
+
+We verify functionality using both manual UI tests and automated CLI jobs.
+
+*   **📄 [Verification Walkthrough](walkthrough.md)**: See detailed steps on how we verified the AI capabilities and Ephemeral job execution.
+
+---
+
+## 📜 License
 MIT License
