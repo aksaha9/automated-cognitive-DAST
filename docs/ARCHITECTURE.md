@@ -16,8 +16,8 @@ The solution leverages Google Cloud Run for serverless scale, Secret Manager for
 
 ```mermaid
 graph TD
-    User[User / CI/CD] -->|HTTPS| WebApp[Cloud Run Service\n(Web App)]
-    User -->|gcloud run jobs| Job[Cloud Run Job\n(Ephemeral Scanner)]
+    User[User / CI/CD] -->|HTTPS| WebApp["Cloud Run Service\n(Web App)"]
+    User -->|gcloud run jobs| Job["Cloud Run Job\n(Ephemeral Scanner)"]
     
     subgraph "Cloud Run Service"
         UI[React Frontend]
