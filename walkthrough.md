@@ -5,14 +5,16 @@ We have deployed a live instance of the application on Google Cloud Run. You can
 👉 **[https://automated-cognitive-dast-service-510071073932.us-central1.run.app/](https://automated-cognitive-dast-service-510071073932.us-central1.run.app/)**
 
 ## 2. AI Assisted Scan Verification
-The following recording demonstrates an AI-Assisted scan running on the public instance.
-**Scenario**: The user asks the AI to **"Can this target site be exploited for getting unauthorised data out and leaked?"** on `https://example.com`.
-**Process**:
-1.  User inputs natural language prompt.
-2.  Gemini analyzes intent and configures ZAP.
-3.  Scan executes and results are displayed.
 
-![AI Assisted Scan Demo](docs/images/ai_scan_data_leak_check.webp)
+**Verification Sequence (Manual):**
+
+1.  **Enable AI Mode**: Toggled the "AI Assisted" slider on the dashboard.
+2.  **Input Requirement**: Entered the natural language prompt: *"I want to check for data leaks against the target https://example.com"*.
+3.  **Analyze Intent**: Clicked the "Analyze Intent" button.
+    *   **Backend Action**: The system triggered an MCP call to the LLM (Gemini).
+    *   **Result**: The LLM interpreted the intent and automatically selected relevant ZAP scan policies (e.g., Information Disclosure, Sensitive Data Exposure).
+4.  **Execute Scan**: Confirmed the selection and started the scan.
+    *   **Outcome**: The scan ran successfully, focusing only on the interpreted risks.
 
 ## 3. Ephemeral Headless Scan Verification
 We verified the **Ephemeral Job** functionality using the Google Cloud CLI. This mode bypasses the UI and runs the scan as a serverless job.
@@ -54,6 +56,8 @@ To run this application successfully on Cloud Run, ensure the following configur
 
 ### Deployment Command
 ```bash
-gcloud builds submit --config cloudbuild.yaml .
+gcloud builds submit --config cloudbuild.yaml \
+  --substitutions=_SERVICE_ACCOUNT=your-service-account@your-project.iam.gserviceaccount.com,_GCS_REPORT_BUCKET=your-reports-bucket \
+  .
 ```
 This builds the unified Docker image and deploys both the **Service** (UI) and the **Job** (Ephemeral).
