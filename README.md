@@ -110,5 +110,11 @@ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=za
 
 ---
 
-## 📜 License
+## � More Examples
+Check out **[Examples.md](Examples.md)** for detailed usage scenarios, including:
+*   Running Ephemeral Scans on Cloud Run with full output logs.
+
+---
+
+## �📜 License
 MIT License
