@@ -5,6 +5,7 @@
 ### 1. Data Harvesting Check (Cloud Run)
 Example of an ephemeral job scan command with a natural language prompt *"I want to check if this target is susceptible to data harvesting attacks"* on the target `https://example.com` with output and retrieval of results.
 
+**1. Command to execute the ephemeral job scan**
 ```bash
 $ gcloud run jobs execute zap-mcp-server-job --region us-central1 --args="--target=https://example.com" --args="--vuln=I want to check if this target is susceptible to data harvesting attacks" --args="--format=sarif" --args="--output=report.json"
 ✓ Creating execution... Done.                                                                                                                                      
@@ -16,6 +17,10 @@ View details about this execution by running:
 gcloud run jobs executions describe zap-mcp-server-job-*****
 
 Or visit https://console.cloud.google.com/run/jobs/executions/details/us-central1/zap-mcp-server-job-*****/tasks?project=my-project-id
+```
+
+**2. Command to fetch the job details along with status of job using the job id from previous command**
+```bash
 $ gcloud run jobs executions describe zap-mcp-server-job-*****
 … Execution zap-mcp-server-job-***** in region us-central1
 1 task currently running
@@ -38,6 +43,10 @@ Env vars:
 Secrets:
   /config           llm_config:latest
 … Waiting for execution to complete.
+```
+
+**3. Command to fetch the results summary once the scan is completed (status obtained from the previous command)**
+```bash
 $ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=zap-mcp-server-job AND labels.\"run.googleapis.com/execution_name\"=zap-mcp-server-job-*****" --limit 100 --format="value(textPayload)"
 
 Container called exit(0).
