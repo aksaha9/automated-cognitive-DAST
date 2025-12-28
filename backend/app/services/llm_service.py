@@ -1,6 +1,6 @@
 from app.core.config import get_settings
 from app.models import ScanType
-import google.generativeai as genai
+from google import genai
 import json
 
 class LLMService:
@@ -9,20 +9,21 @@ class LLMService:
         self.setup_provider()
 
     def setup_provider(self):
-        self.model = None
+        self.client = None
         if self.settings.ai_provider == 'google':
             if not self.settings.ai_api_key or self.settings.ai_api_key == "your_api_key_here":
                 print("Warning: No API Key found for Gemini. Using Mock Mode.")
                 return
-            genai.configure(api_key=self.settings.ai_api_key)
-            self.model = genai.GenerativeModel(self.settings.ai_model)
+            self.client = genai.Client(api_key=self.settings.ai_api_key)
+            # self.model = genai.GenerativeModel(self.settings.ai_model) # Old SDK
+            self.model_name = self.settings.ai_model
 
     def analyze_intent(self, user_prompt: str):
         """
         Analyzes the natural language prompt and returns a structured scan configuration.
         """
         # Mock Response for Testing/Demo if no key provided
-        if not self.model:
+        if not self.client:
             print("Processing in Mock Mode")
             # Simple keyword matching for demo purposes
             checks = []
@@ -64,7 +65,10 @@ class LLMService:
         
         try:
             if self.settings.ai_provider == 'google':
-                response = self.model.generate_content(full_prompt)
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=full_prompt
+                )
                 # Clean up if the model includes markdown formatting
                 text = response.text.strip()
                 if text.startswith("```json"):
