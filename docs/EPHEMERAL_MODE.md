@@ -31,8 +31,8 @@ To run a scan against `https://example.com` checking for data harvesting risks:
 ```bash
 gcloud run jobs execute zap-mcp-server-job \
   --region us-central1 \
-  --args="--url=https://example.com" \
-  --args="--ai-prompt=I want to check if this target is susceptible to data harvesting attacks" \
+  --args="--target=https://example.com" \
+  --args="--vuln=I want to check if this target is susceptible to data harvesting attacks" \
   --args="--format=json" \
   --args="--output=report.json"
 ```
@@ -40,9 +40,8 @@ gcloud run jobs execute zap-mcp-server-job \
 ### Command (Local Docker)
 ```bash
 docker run --rm \
-  -e GEMINI_API_KEY=$GEMINI_API_KEY \
-  automated-cognitive-dast \
-  python3 job_runner.py \
-  --url https://example.com \
-  --ai-prompt "Check for IDOR vulnerabilities"
+  -v $(pwd)/config/llm_config.json:/config/llm_config.json \
+  dast-ephemeral \
+  --target https://example.com \
+  --vuln "Check for IDOR vulnerabilities"
 ```

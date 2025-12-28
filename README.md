@@ -41,11 +41,17 @@ Run the full stack (Frontend, Backend, ZAP) locally using Docker Compose.
     git clone https://github.com/aksaha9/automated-cognitive-DAST.git
     cd automated-cognitive-DAST
     ```
-2.  Set your API Key:
-    ```bash
-    export GEMINI_API_KEY="your_api_key_here"
+2.  Create a configuration file `config.ini`:
+    ```ini
+    [AI]
+    api_key = your_api_key_here
+    model = gemini-1.5-pro-002
     ```
-3.  Launch:
+3.  Launch (mounting the config):
+    ```bash
+    docker compose run -v $(pwd)/config.ini:/app/config.ini -p 5173:5173 -p 8000:8000 app
+    ```
+    *Or simply use `docker compose up --build` if you have configured the volume in `docker-compose.yaml`.*
     ```bash
     docker compose up --build
     ```
@@ -82,8 +88,10 @@ Build the ephemeral image from scratch and run a containerized scan:
 # Build
 docker build --no-cache -f Dockerfile.ephemeral -t dast-ephemeral .
 
-# Run (requires GEMINI_API_KEY env var)
-docker run --rm -e GEMINI_API_KEY=$GEMINI_API_KEY dast-ephemeral \
+# Run (requires mounted llm_config.json)
+docker run --rm \
+  -v $(pwd)/config/llm_config.json:/config/llm_config.json \
+  dast-ephemeral \
   --target https://example.com \
   --vuln "I want to check for weaknesses in the target for data harvesting attacks" \
   --format sarif

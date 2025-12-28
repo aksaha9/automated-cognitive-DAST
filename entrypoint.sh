@@ -76,6 +76,7 @@ done
 
 # Validate required args
 if [[ -z "$TARGET_URL" || -z "$VULN_DESC" ]]; then
+    echo "{\"error\": \"Missing required arguments\", \"message\": \"Both --target and --vuln must be provided.\", \"code\": \"MISSING_ARGS\"}"
     echo "Error: --target and --vuln are required."
     show_help
 fi
@@ -88,15 +89,13 @@ mkdir -p "$REPORTS_DIR"
 # 2. Mounted config ($CONFIG_DIR/llm_config.json)
 # 3. GEMINI_API_KEY environment variable
 
-if [[ -f "/home/zap/llm_config.json" ]]; then
-    echo "Info: Using baked-in configuration."
-elif [[ -f "$CONFIG_DIR/llm_config.json" ]]; then
+if [[ -f "$CONFIG_DIR/llm_config.json" ]]; then
     cp "$CONFIG_DIR/llm_config.json" /home/zap/llm_config.json
     echo "Info: Using mounted configuration from $CONFIG_DIR."
-elif [[ -n "$GEMINI_API_KEY" ]]; then
-    echo "Info: llm_config.json not found, using GEMINI_API_KEY from environment."
 else
-    echo "Error: llm_config.json not found (baked-in or mounted) AND GEMINI_API_KEY not set!"
+    echo "Error: Secure configuration required!"
+    echo "Please mount 'llm_config.json' to '/config/llm_config.json'."
+    echo "Example: -v \$(pwd)/config:/config"
     exit 1
 fi
 

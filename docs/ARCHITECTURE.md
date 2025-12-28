@@ -102,7 +102,7 @@ sequenceDiagram
     participant GCS as GCS Bucket
 
     CI->>Job: Execute (--target, --vuln)
-    Job->>Secrets: Fetch GEMINI_API_KEY
+    Job->>Secrets: Read Config File
     Job->>Job: Call LLM -> Generate Config
     Job->>Job: Run ZAP (Headless)
     Job->>GCS: Upload Report (SARIF/JSON)

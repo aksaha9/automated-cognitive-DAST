@@ -12,7 +12,7 @@ participant "GCS Bucket" as GCS
 Trigger -> Job : Execute (Arguments:\n--target, --vuln)
 activate Job
 
-Job -> Secrets : Fetch API Key
+Job->Secrets: Read Config File (Mounted Secret)
 activate Secrets
 Secrets --> Job : GEMINI_API_KEY
 deactivate Secrets

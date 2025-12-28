@@ -71,6 +71,9 @@ async def stop_scan(scan_id: str):
 async def start_scan(request: ScanRequest, background_tasks: BackgroundTasks):
     # Normalize URL: Ensure it starts with http:// or https://
     target_url = request.target_url
+    if not target_url or not target_url.strip():
+        raise HTTPException(status_code=400, detail="Target URL is required")
+
     if not target_url.startswith("http"):
         target_url = "https://" + target_url
 

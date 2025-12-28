@@ -30,7 +30,6 @@ steps:
     args: ['push', 'gcr.io/$PROJECT_ID/zap-mcp-server:latest']
 
   # 5. Deploy Ephemeral Cloud Run Job (Example Definition)
-  # Requires GEMINI_API_KEY to be set in environment or secrets
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
@@ -62,8 +61,10 @@ steps:
           --memory 4Gi \
           --cpu 2 \
           --max-instances 1 \
+          --service-account=${_SERVICE_ACCOUNT} \
           --timeout 900 \
-          --no-cpu-throttling
+          --no-cpu-throttling \
+          --set-secrets=/secrets/llm_config.json=llm_config:latest
           # Memory/CPU boost for ZAP
 
   # 4. Deploy/Update Ephemeral Job definition

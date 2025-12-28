@@ -8,13 +8,22 @@ from fastmcp import FastMCP
 # Load LLM config from llm_config.json (copied by entrypoint.sh)
 try:
     with open("llm_config.json", "r") as f:
-        llm_config = json.load(f)
+        file_content = f.read().strip()
+    
+    try:
+        llm_config = json.loads(file_content)
+    except json.JSONDecodeError:
+        # Fallback: Treat as raw API key
+        if file_content:
+            llm_config = {"api_key": file_content}
+        else:
+            llm_config = {}
 except FileNotFoundError:
     llm_config = {}
 
-API_KEY = os.getenv("GEMINI_API_KEY") or llm_config.get("api_key")
+API_KEY = llm_config.get("api_key")
 if not API_KEY:
-    raise ValueError("GEMINI_API_KEY env var or api_key in llm_config.json is required.")
+    raise ValueError("Secure configuration error: 'api_key' is missing in llm_config.json.")
 
 MODEL = llm_config.get("model", "gemini-3-pro-preview")
 BASE_URL = llm_config.get("base_url", "https://generativelanguage.googleapis.com")

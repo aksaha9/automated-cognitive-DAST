@@ -74,7 +74,12 @@ We updated the parser to respect the `count` field in ZAP alerts and verified it
 Built the `dast-ephemeral` image from scratch and ran it detached from the main stack:
 ```bash
 docker build --no-cache -f Dockerfile.ephemeral -t dast-ephemeral .
-docker run --rm -e GEMINI_API_KEY=$GEMINI_API_KEY dast-ephemeral --target https://example.com --vuln "I want to check for weaknesses in the target for data harvesting attacks" --format sarif
+docker run --rm \
+  -v $(pwd)/config/llm_config.json:/home/zap/llm_config.json \
+  dast-ephemeral \
+  --target https://example.com \
+  --vuln "I want to check for weaknesses in the target for data harvesting attacks" \
+  --format sarif
 ```
 
 #### Cloud Verification

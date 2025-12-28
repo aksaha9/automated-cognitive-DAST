@@ -1,5 +1,5 @@
 # Stage 1: Build Frontend
-FROM node:18-alpine as frontend-build
+FROM node:18-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
@@ -40,7 +40,6 @@ RUN pip3 install --no-cache-dir -r /app/requirements.txt google-cloud-storage
 # Copy Application Code
 WORKDIR /app
 COPY backend/app /app/app
-COPY backend/config.ini.template /app/config.ini
 COPY backend/scan_rules.yaml /app/
 COPY backend/job_runner.py /app/
 COPY backend/start_service.sh /app/
