@@ -3,11 +3,14 @@
 ## Example Ephemeral Job Scans
 
 ### 1. Data Harvesting Check (Cloud Run)
-Example of an ephemeral job scan command with a natural language prompt *"I want to check if this target is susceptible to data harvesting attacks"* on the target `https://example.com` with output and retrieval of results.
+Example of an ephemeral job scan command with a natural language prompt *"I want to check if this target is susceptible to data 
+harvesting attacks"* on the target `https://example.com` with output and retrieval of results.
 
 **1. Command to execute the ephemeral job scan**
 ```bash
-$ gcloud run jobs execute zap-mcp-server-job --region us-central1 --args="--target=https://example.com" --args="--vuln=I want to check if this target is susceptible to data harvesting attacks" --args="--format=sarif" --args="--output=report.json"
+$ gcloud run jobs execute zap-mcp-server-job --region us-central1 --args="--target=https://example.com" \
+ --args="--vuln=I want to check if this target is susceptible to data harvesting attacks"\
+ --args="--format=sarif" --args="--output=report.json"
 ✓ Creating execution... Done.                                                                                                                                      
   ✓ Provisioning resources... Provisioned imported containers.                                                                                                     
 Done.                                                                                                                                                              
@@ -47,7 +50,8 @@ Secrets:
 
 **3. Command to fetch the results summary once the scan is completed (status obtained from the previous command)**
 ```bash
-$ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=zap-mcp-server-job AND labels.\"run.googleapis.com/execution_name\"=zap-mcp-server-job-*****" --limit 100 --format="value(textPayload)"
+$ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=zap-mcp-server-job\
+ AND labels.\"run.googleapis.com/execution_name\"=zap-mcp-server-job-*****" --limit 100 --format="value(textPayload)"
 
 Container called exit(0).
   - 2 | Informational (Low) | Re-examine Cache-control Directives
