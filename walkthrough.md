@@ -15,6 +15,14 @@ We have deployed a live instance of the application on Google Cloud Run. You can
     *   **Result**: The LLM interpreted the intent and automatically selected relevant ZAP scan policies (e.g., Information Disclosure, Sensitive Data Exposure).
 4.  **Execute Scan**: Confirmed the selection and started the scan.
     *   **Outcome**: The scan ran successfully, focusing only on the interpreted risks.
+    
+**Verification Screenshots:**
+![AI Assisted UI Scan](examples/verifications/Example_AI_assisted_UI_scan.png)
+*Fig: AI Assisted UI Scan in action*
+
+![AI Assisted UI Scan Report](examples/verifications/Example_AI_assisted_UI_scan_report.png)
+*Fig: Generated Scan Summary Report*
+
 
 ## 3. Ephemeral Headless Scan Verification
 We verified the **Ephemeral Job** functionality using the Google Cloud CLI. This mode bypasses the UI and runs the scan as a serverless job.
